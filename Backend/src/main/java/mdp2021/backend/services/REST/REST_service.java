@@ -23,9 +23,6 @@ import mdp2021.backend.utilities.REDIS_UserSessions;
 import mdp2021.backend.utilities.UserSessions;
 
 
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
-
 @Path("/v1")
 public class REST_service
 {

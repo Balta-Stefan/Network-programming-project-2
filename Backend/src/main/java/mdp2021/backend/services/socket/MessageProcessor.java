@@ -3,6 +3,10 @@ package mdp2021.backend.services.socket;
 import java.io.IOException;
 import java.net.Socket;
 import java.util.Optional;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import mdp2021.backend.model.User;
 import mdp2021.backend.shared.Code_response;
@@ -15,6 +19,23 @@ import mdp2021.backend.utilities.UserSessions;
 
 public class MessageProcessor extends Thread
 {
+	private static final Logger log = Logger.getLogger(MessageProcessor.class.getName());
+	static
+	{
+		log.setLevel(Level.FINEST);
+		FileHandler txtHandler;
+		try
+		{
+			txtHandler = new FileHandler("Logs/MessageProcessor.txt", true);
+			SimpleFormatter txtFormatter = new SimpleFormatter();
+			txtHandler.setFormatter(txtFormatter);
+			log.addHandler(txtHandler);
+		} catch (SecurityException | IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	private Socket socket;
 	private static int sessionDurationSeconds;
 	//public static SubscribersContainer subscribers;

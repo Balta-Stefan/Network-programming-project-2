@@ -84,4 +84,7 @@ Application data/
 # Ignore soap service files
 SOAP_serviceService/
 
+# Ignore logs
+Logs/
+
 # End of https://www.toptal.com/developers/gitignore/api/eclipse

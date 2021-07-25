@@ -3,6 +3,10 @@ package mdp2021.backend.services.socket;
 import java.io.IOException;
 import java.net.ServerSocket;
 import java.net.Socket;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import javax.net.ssl.SSLServerSocketFactory;
 
@@ -10,6 +14,23 @@ import javax.net.ssl.SSLServerSocketFactory;
 
 public class Socket_service extends Thread
 {
+	private static final Logger log = Logger.getLogger(Socket_service.class.getName());
+	static
+	{
+		log.setLevel(Level.FINEST);
+		FileHandler txtHandler;
+		try
+		{
+			txtHandler = new FileHandler("Logs/Socket_service.txt", true);
+			SimpleFormatter txtFormatter = new SimpleFormatter();
+			txtHandler.setFormatter(txtFormatter);
+			log.addHandler(txtHandler);
+		} catch (SecurityException | IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	public boolean run = true;
 	
 	private ServerSocket serverSocket;

@@ -1,12 +1,14 @@
 package mdp2021.backend.GUI.controllers;
 
-import java.io.File;
-import java.io.FileInputStream;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import mdp2021.backend.model.StationArrival;
 import mdp2021.backend.model.TrainLine;
@@ -16,6 +18,23 @@ import mdp2021.backend.persistence.REDIS_TrainstationPersistence;
 
 public class TrainstationsController
 {
+	private static final Logger log = Logger.getLogger(TrainstationsController.class.getName());
+	static
+	{
+		log.setLevel(Level.FINEST);
+		FileHandler txtHandler;
+		try
+		{
+			txtHandler = new FileHandler("Logs/TrainstationsController.txt", true);
+			SimpleFormatter txtFormatter = new SimpleFormatter();
+			txtHandler.setFormatter(txtFormatter);
+			log.addHandler(txtHandler);
+		} catch (SecurityException | IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	private static HashMap<TrainStation, TrainStation> trainStations = new HashMap<>();
 
 	

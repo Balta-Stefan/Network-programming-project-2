@@ -6,12 +6,34 @@ import java.beans.XMLEncoder;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
+import java.io.IOException;
 import java.util.Optional;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import mdp2021.backend.model.User;
 
 public class XML_UserDAO implements IUserDAO
 {
+	private static final Logger log = Logger.getLogger(XML_UserDAO.class.getName());
+	static
+	{
+		log.setLevel(Level.FINEST);
+		FileHandler txtHandler;
+		try
+		{
+			txtHandler = new FileHandler("Logs/XML_UserDAO.txt", true);
+			SimpleFormatter txtFormatter = new SimpleFormatter();
+			txtHandler.setFormatter(txtFormatter);
+			log.addHandler(txtHandler);
+		} catch (SecurityException | IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	private final String pathPrefix;
 	
 	public XML_UserDAO(String pathPrefix)

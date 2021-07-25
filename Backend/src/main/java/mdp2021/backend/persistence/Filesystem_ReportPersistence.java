@@ -4,6 +4,10 @@ package mdp2021.backend.persistence;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import com.google.gson.Gson;
 
@@ -17,6 +21,23 @@ import mdp2021.backend.shared.FileHolder;
 
 public class Filesystem_ReportPersistence implements IReportPersistence
 {
+	private static final Logger log = Logger.getLogger(Filesystem_ReportPersistence.class.getName());
+	static
+	{
+		log.setLevel(Level.FINEST);
+		FileHandler txtHandler;
+		try
+		{
+			txtHandler = new FileHandler("Logs/Filesystem_ReportPersistence.txt", true);
+			SimpleFormatter txtFormatter = new SimpleFormatter();
+			txtHandler.setFormatter(txtFormatter);
+			log.addHandler(txtHandler);
+		} catch (SecurityException | IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	private Gson gson = new Gson();
 	
 	

@@ -1,11 +1,16 @@
 package mdp2021.backend.persistence;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
@@ -19,6 +24,23 @@ import redis.clients.jedis.Jedis;
 
 public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 {
+	private static final Logger log = Logger.getLogger(REDIS_TrainstationPersistence.class.getName());
+	static
+	{
+		log.setLevel(Level.FINEST);
+		FileHandler txtHandler;
+		try
+		{
+			txtHandler = new FileHandler("Logs/REDIS_TrainstationPersistence.txt", true);
+			SimpleFormatter txtFormatter = new SimpleFormatter();
+			txtHandler.setFormatter(txtFormatter);
+			log.addHandler(txtHandler);
+		} catch (SecurityException | IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	private static final List<TrainstationUsers> trainstationUsers = new ArrayList<>();
 	
 	// getters

@@ -2,6 +2,7 @@ package mdp2021.backend.GUI;
 
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -12,6 +13,10 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import javafx.collections.ObservableList;
 import javafx.event.Event;
@@ -38,6 +43,23 @@ import mdp2021.backend.shared.FileHolder;
 
 public class GUI_Controller
 {
+	private static final Logger log = Logger.getLogger(GUI_Controller.class.getName());
+	static
+	{
+		log.setLevel(Level.FINEST);
+		FileHandler txtHandler;
+		try
+		{
+			txtHandler = new FileHandler("Logs/GUI_Controller.txt", true);
+			SimpleFormatter txtFormatter = new SimpleFormatter();
+			txtHandler.setFormatter(txtFormatter);
+			log.addHandler(txtHandler);
+		} catch (SecurityException | IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	private static final String downloadFolder = "Application data\\Downloaded reports\\";
 	private static final String RMI_service_nameProperty = "RMI_service_name";
 	private static final String RMI_service_portProperty = "RMI_service_port";

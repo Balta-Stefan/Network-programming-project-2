@@ -1,11 +1,13 @@
 package mdp2021.backend.utilities;
 
-import java.security.SecureRandom;
-import java.util.Base64;
-import java.util.Base64.Encoder;
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import mdp2021.backend.model.TrainStation;
 import mdp2021.backend.model.User;
@@ -13,27 +15,33 @@ import redis.clients.jedis.Jedis;
 
 public class REDIS_UserSessions implements UserSessions
 {
-	
-	public static final int cookieByteLength = 16;
-	
+	private static final Logger log = Logger.getLogger(REDIS_UserSessions.class.getName());
+	static
+	{
+		log.setLevel(Level.FINEST);
+		FileHandler txtHandler;
+		try
+		{
+			txtHandler = new FileHandler("Logs/REDIS_UserSessions.txt", true);
+			SimpleFormatter txtFormatter = new SimpleFormatter();
+			txtHandler.setFormatter(txtFormatter);
+			log.addHandler(txtHandler);
+		} catch (SecurityException | IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
 	
 	private final int sessionDurationSeconds;
-	
-	private final SecureRandom randomGenerator = new SecureRandom();
 	
 	public REDIS_UserSessions(int sessionDurationSeconds)
 	{
 		this.sessionDurationSeconds = sessionDurationSeconds;
-		
 	}
 	
 	public String login(User user)
 	{
-		byte[] cookieBytes = new byte[cookieByteLength];
-		randomGenerator.nextBytes(cookieBytes);
-		
-		Encoder base64Encoder = Base64.getEncoder();
-		String stringCookie = base64Encoder.encodeToString(cookieBytes);
+		String stringCookie = CookieGenerator.generateCookie();
 		
 		// insert into Redis database
 		HashMap<String, String> hmap = new HashMap<>();

@@ -1,8 +1,13 @@
 package mdp2021.backend.utilities;
 
+import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 
 
@@ -10,6 +15,23 @@ import java.util.Optional;
 
 public final class SubscribersContainer
 {
+	private static final Logger log = Logger.getLogger(SubscribersContainer.class.getName());
+	static
+	{
+		log.setLevel(Level.FINEST);
+		FileHandler txtHandler;
+		try
+		{
+			txtHandler = new FileHandler("Logs/SubscribersContainer.txt", true);
+			SimpleFormatter txtFormatter = new SimpleFormatter();
+			txtHandler.setFormatter(txtFormatter);
+			log.addHandler(txtHandler);
+		} catch (SecurityException | IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
 	private static HashMap<String, Socket> users = new HashMap<>();
 	
 	public static void subscribe(String username, Socket socket)

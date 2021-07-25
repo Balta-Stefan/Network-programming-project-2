@@ -1,7 +1,12 @@
 package mdp2021.backend.services.SOAP;
 
+import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 import com.google.gson.Gson;
 
@@ -16,13 +21,27 @@ import mdp2021.backend.shared.LoginReply;
 import mdp2021.backend.utilities.BCrypt_hasher;
 import mdp2021.backend.utilities.REDIS_UserSessions;
 import mdp2021.backend.utilities.UserSessions;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.JedisPool;
 
 public final class SOAP_service
 {
 	//private static final String propertiesPath = ".\\Resources\\backend constants.properties";
 	//private static final String userSessionDurationProperty = "userSessionDuration";
+	private static final Logger log = Logger.getLogger(SOAP_service.class.getName());
+	static
+	{
+		log.setLevel(Level.FINEST);
+		FileHandler txtHandler;
+		try
+		{
+			txtHandler = new FileHandler("Logs/SOAP_service.txt", true);
+			SimpleFormatter txtFormatter = new SimpleFormatter();
+			txtHandler.setFormatter(txtFormatter);
+			log.addHandler(txtHandler);
+		} catch (SecurityException | IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
 	
 	private static final int sessionDurationSeconds = 7200;
 	

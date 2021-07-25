@@ -1,0 +1,122 @@
+package mdp2021.backend.services.SOAP;
+
+import java.util.List;
+import java.util.Optional;
+
+import com.google.gson.Gson;
+
+import mdp2021.backend.model.TrainstationUsers;
+import mdp2021.backend.model.User;
+import mdp2021.backend.persistence.ITrainstationPersistence;
+import mdp2021.backend.persistence.IUserDAO;
+import mdp2021.backend.persistence.REDIS_TrainstationPersistence;
+import mdp2021.backend.persistence.XML_UserDAO;
+import mdp2021.backend.shared.Code_response;
+import mdp2021.backend.shared.LoginReply;
+import mdp2021.backend.utilities.BCrypt_hasher;
+import mdp2021.backend.utilities.REDIS_UserSessions;
+import mdp2021.backend.utilities.UserSessions;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+
+public final class SOAP_service
+{
+	//private static final String propertiesPath = ".\\Resources\\backend constants.properties";
+	//private static final String userSessionDurationProperty = "userSessionDuration";
+	
+	private static final int sessionDurationSeconds = 7200;
+	
+	private static final String pathPrefix = "D:\\Knjige za fakultet\\3. godina\\6. semestar\\Mrezno i distribuirano programiranje\\Projekat\\Source\\Backend\\";
+	private static final IUserDAO userDatabase = new XML_UserDAO(pathPrefix + "Application data\\Users\\");
+	
+
+	/*static
+	{
+		// ne radi jer je User.dir u System32 pa relativne putanje ne rade
+		System.out.println("Staticki blok");
+		Properties backendProperties = new Properties();
+		
+		System.out.println(System.getProperty("user.dir"));
+		try(FileInputStream fis = new FileInputStream(new File(propertiesPath)))
+		{
+			backendProperties.load(fis);
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			System.out.println("Izuzetak je: " + e.getMessage());
+			//e.printStackTrace();
+		}
+		
+		String durationProperty = backendProperties.getProperty(userSessionDurationProperty);
+		System.out.println(durationProperty);
+		sessionDurationSeconds = Integer.parseInt(durationProperty);
+	}*/
+	
+
+	
+	public LoginReply login(String username, String password)
+	{
+		Optional<User> user = userDatabase.getUser(username);
+		if(user.isEmpty())
+			return new LoginReply(new Code_response(403, "Username not found."), null, null);
+			//return new Code_response(403, "Username not found");
+		
+		User userInfo = user.get();
+		BCrypt_hasher hasher = new BCrypt_hasher();
+	
+		try
+		{
+			String hashedPass = hasher.hash(userInfo.getSalt(), password);
+			if(hashedPass.equals(userInfo.getPassword()) == false)
+				return new LoginReply(new Code_response(401, "Incorrect password"), null, null);
+		}
+		catch(Exception e)
+		{
+			return new LoginReply(new Code_response(500, "Error."), null, null);
+		}
+		
+		String cookie = null;
+		
+		
+		UserSessions sessions = new REDIS_UserSessions(sessionDurationSeconds);
+		cookie = sessions.login(user.get());
+		
+		
+		return new LoginReply(new Code_response(200, "Success"), userInfo.getTrainStation(), cookie);
+	}
+	
+	public Code_response logout(String cookie)
+	{
+		boolean status = false;
+
+		UserSessions sessions = new REDIS_UserSessions(sessionDurationSeconds);
+		status = sessions.logout(cookie);
+		
+		
+		if(status == false)
+			return new Code_response(500, "Error");
+		
+		return new Code_response(200, "Logout successful");
+	}
+	
+	public String getTrainstationUsers(String cookie)
+	{
+		// the result may be null
+		Optional<User> user = Optional.empty();
+	
+		UserSessions sessions = new REDIS_UserSessions(sessionDurationSeconds);
+		user = sessions.getUser(cookie);
+		
+		if(user.isEmpty())
+			return null;
+		
+		ITrainstationPersistence trainstationData = new REDIS_TrainstationPersistence();
+		
+		Gson gson = new Gson();
+		List<TrainstationUsers> trainstationUsers = trainstationData.getTrainstationUsers();
+		
+		return gson.toJson(trainstationUsers);
+		
+	}
+}

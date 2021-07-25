@@ -80,7 +80,7 @@ public class REDIS_UserSessions implements UserSessions
 		}
 		catch(Exception e)
 		{
-			System.out.println(e);
+			log.info(e.getMessage());
 			return Optional.empty();
 		}
 	}

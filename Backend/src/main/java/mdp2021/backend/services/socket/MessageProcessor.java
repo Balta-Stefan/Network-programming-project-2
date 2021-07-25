@@ -73,7 +73,10 @@ public class MessageProcessor extends Thread
 		try
 		{
 			socket.close();
-		} catch (IOException e){}
+		} catch (IOException e)
+		{
+			log.info(e.getMessage());
+		}
 	}
 	
 	private void handleSubscriptionRequest(User subscriber, CustomSocket cs, SubscribeRequest request)
@@ -130,7 +133,11 @@ public class MessageProcessor extends Thread
 				try
 				{
 					socket.close();
-				} catch (IOException e){}
+				}
+				catch (IOException e)
+				{
+					log.info(e.getMessage());
+				}
 				return;
 			}
 			
@@ -147,6 +154,7 @@ public class MessageProcessor extends Thread
 		}
 		catch(Exception e)
 		{
+			log.info(e.getMessage());
 			Code_response response = new Code_response(500, e.getMessage());
 			cs.send(response);
 		}

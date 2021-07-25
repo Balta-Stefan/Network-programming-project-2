@@ -44,7 +44,7 @@ public class REDIS_CustomPool
 		}
 		catch (Exception e)
 		{
-			e.printStackTrace();
+			log.info(e.getMessage());
 		}
 		
 		String redisURI = backendProperties.getProperty(JedisPool_URI_Property);

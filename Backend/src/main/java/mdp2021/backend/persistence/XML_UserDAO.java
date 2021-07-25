@@ -57,6 +57,7 @@ public class XML_UserDAO implements IUserDAO
 		}
 		catch (Exception e)
 		{
+			log.info(e.getMessage());
 			return Optional.empty();
 		}
 	}
@@ -76,7 +77,11 @@ public class XML_UserDAO implements IUserDAO
 				encoder.writeObject(user);
 			}
 		}
-		catch(Exception e) {return false;}
+		catch(Exception e) 
+		{
+			log.info(e.getMessage());
+			return false;
+		}
 		
 		return true;
 	}

@@ -82,6 +82,7 @@ public class TrainstationsController
 		}
 		catch(Exception e)
 		{
+			log.info(e.getMessage());
 			return Optional.empty();
 		}
 	

@@ -51,7 +51,10 @@ public class FileQueueWorker extends Thread
 		{
 			fileQueue.put(new Stopper());
 		}
-		catch(Exception e) {}
+		catch(Exception e) 
+		{
+			log.info(e.getMessage());
+		}
 	}
 	
 	@Override
@@ -70,8 +73,7 @@ public class FileQueueWorker extends Thread
 			}
 			catch (InterruptedException e)
 			{
-				e.printStackTrace();
-				// log with Logger
+				log.info(e.getMessage());
 			}
 		}
 	}
@@ -83,8 +85,7 @@ public class FileQueueWorker extends Thread
 			fileQueue.put(file);
 		} catch (InterruptedException e)
 		{
-			e.printStackTrace();
-			// log with Logger
+			log.info(e.getMessage());
 		}
 	}
 }

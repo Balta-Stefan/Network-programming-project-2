@@ -81,7 +81,7 @@ public class GUI_Controller
 		catch (Exception e)
 		{
 			// TODO Auto-generated catch block
-			e.printStackTrace();
+			log.info(e.getMessage());
 		}
 		
 		RMI_service_name = backendProperties.getProperty(RMI_service_nameProperty);
@@ -99,7 +99,8 @@ public class GUI_Controller
 		}
 		catch(Exception e)
 		{
-			e.printStackTrace();
+			log.info(e.getMessage());
+			//e.printStackTrace();
 		}
 	}
 	
@@ -321,6 +322,7 @@ public class GUI_Controller
     	}
     	catch(NumberFormatException e)
     	{
+    		log.info(e.getMessage());
     		trainstationInteractionStatusLabel.setText("Enter ID of the trainstation");
     		trainstationInteractionStatusLabel.setTextFill(Color.RED);
     		return;
@@ -371,7 +373,11 @@ public class GUI_Controller
     	{
     		time = LocalTime.parse(timeValue);
     	}
-    	catch(DateTimeParseException e) {return;}
+    	catch(DateTimeParseException e) 
+    	{
+    		log.info(e.getMessage());
+    		return;
+    	}
     	
     	LocalDateTime dateTime = LocalDateTime.of(date, time);
 
@@ -469,6 +475,7 @@ public class GUI_Controller
 		} 
 		catch (RemoteException e)
 		{
+			log.info(e.getMessage());
 			reportsStatusMessageLabel.setText("Error has occured while fetching files list");
     		reportsStatusMessageLabel.setTextFill(Color.RED);
     		return;
@@ -500,6 +507,7 @@ public class GUI_Controller
 		}
     	catch (Exception e)
 		{
+    		log.info(e.getMessage());
 			reportsStatusMessageLabel.setText("Error has occured while obtaining file data.");
     		reportsStatusMessageLabel.setTextFill(Color.RED);
     		return;
@@ -526,6 +534,7 @@ public class GUI_Controller
 		} 
     	catch (RemoteException e)
 		{
+    		log.info(e.getMessage());
     		reportsStatusMessageLabel.setText("Error has occured while obtaining file data.");
     		reportsStatusMessageLabel.setTextFill(Color.RED);
     		return;

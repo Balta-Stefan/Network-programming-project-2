@@ -92,6 +92,7 @@ public final class SOAP_service
 		}
 		catch(Exception e)
 		{
+			log.info(e.getMessage());
 			return new LoginReply(new Code_response(500, "Error."), null, null);
 		}
 		

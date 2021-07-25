@@ -57,7 +57,10 @@ public class Socket_service extends Thread
 				Socket clientSocket = serverSocket.accept();
 				new MessageProcessor(clientSocket).start();
 			}
-			catch (IOException e) {}
+			catch (IOException e) 
+			{
+				log.info(e.getMessage());
+			}
 		}
 	}
 }

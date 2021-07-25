@@ -79,7 +79,7 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 				}
 				catch(Exception e)
 				{
-					// log exception here with Logger class
+					log.info(e.getMessage());
 				}
 			}
 			
@@ -199,7 +199,7 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 				}
 				catch(Exception e)
 				{
-					e.printStackTrace();
+					log.info(e.getMessage());
 				}
 			}
 			

@@ -71,6 +71,7 @@ public class Filesystem_ReportPersistence implements IReportPersistence
 			}
 			catch (IOException e)
 			{
+				log.info(e.getMessage());
 				continue;
 			}
 			
@@ -107,6 +108,7 @@ public class Filesystem_ReportPersistence implements IReportPersistence
 		}
 		catch (IOException e)
 		{
+			log.info(e.getMessage());
 			return Optional.empty();
 		}
 	}
@@ -140,6 +142,7 @@ public class Filesystem_ReportPersistence implements IReportPersistence
 		}
 		catch (IOException e)
 		{
+			log.info(e.getMessage());
 			return false;
 		}
 		

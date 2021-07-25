@@ -50,7 +50,10 @@ public final class SubscribersContainer
 			try
 			{
 				socket.close();
-			} catch (Exception e) {}
+			} catch (Exception e) 
+			{
+				log.info(e.getMessage());
+			}
 		}
 	}
 	

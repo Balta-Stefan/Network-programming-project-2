@@ -48,6 +48,7 @@ public class UsersController
 		}
 		catch (Exception e)
 		{
+			log.info(e.getMessage());
 			return false;
 		}
 	}

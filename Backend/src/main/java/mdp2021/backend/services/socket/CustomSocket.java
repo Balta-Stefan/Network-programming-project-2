@@ -64,7 +64,7 @@ public class CustomSocket
 		}
 		catch (IOException e1)
 		{
-			System.out.println(e1);
+			log.info(e1.getMessage());
 			return Optional.empty();
 		}
 		
@@ -76,7 +76,7 @@ public class CustomSocket
 		}
 		catch (Exception e)
 		{
-			System.out.println(e);
+			log.info(e.getMessage());
 			return Optional.empty();
 		}
 	}
@@ -96,7 +96,7 @@ public class CustomSocket
 		}
 		catch (IOException e1)
 		{
-			System.out.println(e1);
+			log.info(e1.getMessage());
 			return false;
 		}
 		
@@ -118,7 +118,7 @@ public class CustomSocket
 		}
 		catch (IOException e)
 		{
-			System.out.println(e);
+			log.info(e.getMessage());
 			return false;
 		}
 		

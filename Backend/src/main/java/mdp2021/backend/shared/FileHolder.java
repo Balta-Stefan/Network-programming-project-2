@@ -13,7 +13,7 @@ public class FileHolder implements Serializable
 		public final String fileName;
 		public final int fileSize;
 		
-		public final String dateTime;
+		public final String dateTime; // String is user over LocalDateTime because GSON doesn't support LocalDateTime
 		
 		public FileMetadata(String fileName, LocalDateTime dateTime, String username, int fileSize)
 		{

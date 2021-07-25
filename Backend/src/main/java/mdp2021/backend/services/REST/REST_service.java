@@ -50,12 +50,12 @@ public class REST_service
 		
 		User user = session.get();
 		
-		LinesOfTrainstation schedules = trainstationPersistence.getTrainstationLines(user.getTrainStation());
+		Optional<LinesOfTrainstation> schedules = trainstationPersistence.getTrainstationLines(user.getTrainStation());
 		
-		if(schedules == null)
+		if(schedules.isEmpty())
 			return Response.status(500).build();
 		
-		return Response.status(200).entity(schedules).build();
+		return Response.status(200).entity(schedules.get()).build();
 		
 	}
 	

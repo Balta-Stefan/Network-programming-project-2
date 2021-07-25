@@ -61,6 +61,13 @@ public class MessageProcessor extends Thread
 			synchronized(receiver)
 			{
 				// synchronization on the socket is necessary to avoid problems with sending multiple messages at the same time
+				if(receiver.isClosed())
+				{
+					SubscribersContainer.unsubscribe(message.receiver_username);
+					Code_response response = new Code_response(400, "Receiver is not online.");
+					senderCustomSocket.send(response);
+					return;
+				}
 				
 				CustomSocket receiverCS = new CustomSocket(receiver);
 				
@@ -68,14 +75,6 @@ public class MessageProcessor extends Thread
 				
 				receiverCS.send(message);
 			}
-		}
-		
-		try
-		{
-			socket.close();
-		} catch (IOException e)
-		{
-			log.info(e.getMessage());
 		}
 	}
 	

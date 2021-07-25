@@ -71,8 +71,10 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 					if(ID == station.getID())
 					{
 						String dateTimeOfArrival = data.get(k);
-						LocalDateTime dateTime = LocalDateTime.parse(dateTimeOfArrival);
-						StationArrival arrival = new StationArrival(station, dateTime);
+						boolean passed = (dateTimeOfArrival.charAt(0) == 'P') ? true : false;
+						
+						LocalDateTime dateTime = LocalDateTime.parse(dateTimeOfArrival.substring(2));
+						StationArrival arrival = new StationArrival(station, dateTime, passed);
 						
 						return Optional.of(arrival);
 					}
@@ -87,7 +89,7 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 		}
 	}
 	
-	public LinesOfTrainstation getTrainstationLines(TrainStation trainstation)
+	public Optional<LinesOfTrainstation> getTrainstationLines(TrainStation trainstation)
 	{
 		// this needs to be tested, most likely doesn't work
 		try(Jedis jedis = REDIS_CustomPool.getConnection())
@@ -97,7 +99,7 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 			
 			// what happens if given key doesn't exist?Will setValues be null or empty?
 			if(setValues == null || setValues.isEmpty())
-				return null;
+				return Optional.empty();
 			
 			List<TrainLine> linesThroughStation = new ArrayList<>();
 			
@@ -122,16 +124,20 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 					
 					// the assumption is that all keys are valid
 					int stationID = Integer.parseInt(station.substring(semicolumnIndex+1));
-					LocalDateTime dateTime = LocalDateTime.parse(lineData.get(station));
 					
-					StationArrival arrivalData = new StationArrival(new TrainStation(stationID), dateTime);
+					String arrivalInfo = lineData.get(station);
+					boolean passed = (arrivalInfo.charAt(0) == 'P') ? true : false;
+					
+					LocalDateTime dateTime = LocalDateTime.parse(arrivalInfo.substring(2));
+					
+					StationArrival arrivalData = new StationArrival(new TrainStation(stationID), dateTime, passed);
 					stationArrivals.add(arrivalData);
 				}
 				
 				linesThroughStation.add(new TrainLine(lineID, lineRepresentation, stationArrivals));
 			}
 			
-			return new LinesOfTrainstation(trainstation, linesThroughStation);
+			return Optional.of(new LinesOfTrainstation(trainstation, linesThroughStation));
 		}
 	}
 	
@@ -141,7 +147,7 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 	{
 		try(Jedis jedis = REDIS_CustomPool.getConnection())
 		{
-			jedis.hset("line:" + report.trainLine.lineID, "station:" + report.trainstation.getID(), report.datetime.toString());
+			jedis.hset("line:" + report.trainLine.lineID, "station:" + report.trainstation.getID(), "P-" + report.datetime.toString());
 		}
 		return true;
 	}
@@ -194,7 +200,6 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 				{
 					String stationID = key.substring(8); // format is: station:someNumber
 					
-					
 					jedis.srem("station-lines:" + stationID, "line:" + line.lineID);
 				}
 				catch(Exception e)
@@ -211,6 +216,7 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 			return false;
 		}
 	}
+	/*
 	// unused
 	public boolean addTrainstationLines(LinesOfTrainstation lines)
 	{
@@ -224,13 +230,14 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 				
 				for(StationArrival arrival : line.stationArrivals)
 				{
+					
 					jedis.hset("line:" + line.lineID, "station:" + arrival.trainStation.getID(), arrival.timeOfArrival.toString());
 				}
 			}
 		}
 	
 		return true;
-	}
+	}*/
 	
 	public boolean addLine(TrainLine line)
 	{
@@ -245,13 +252,15 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 			{
 				StationArrival arrival = arrivals.get(i);
 				
-				jedis.hset("line:"+line.lineID, "station:"+arrival.trainStation.getID(), arrival.timeOfArrival.toString());
-				jedis.sadd("station-lines:"+arrival.trainStation.getID(), "line:"+line.lineID);
+				String toAppend = (arrival.passed == true) ? "P-" : "E-";
+				jedis.hset("line:"+line.lineID, "station:"+arrival.trainStation.getID(), toAppend + arrival.timeOfArrival.toString());
+				jedis.sadd("station-lines:" + arrival.trainStation.getID(), "line:"+line.lineID);
 			}
 			StationArrival arrival = arrivals.get(i);
 			
-			jedis.hset("line:"+line.lineID, "station:"+arrival.trainStation.getID(), arrival.timeOfArrival.toString());
-			jedis.sadd("station-lines:"+arrival.trainStation.getID(), "line:"+line.lineID);
+			String toAppend = (arrival.passed == true) ? "P-" : "E-";
+			jedis.hset("line:"+line.lineID, "station:"+arrival.trainStation.getID(), toAppend + arrival.timeOfArrival.toString());
+			jedis.sadd("station-lines:" + arrival.trainStation.getID(), "line:"+line.lineID);
 		}
 		return true;
 	}

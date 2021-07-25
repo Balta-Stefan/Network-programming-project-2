@@ -15,14 +15,14 @@ public interface ITrainstationPersistence
 {
 	// getters
 	public List<TrainstationUsers> getTrainstationUsers();
-	public LinesOfTrainstation getTrainstationLines(TrainStation trainstation);
+	public Optional<LinesOfTrainstation> getTrainstationLines(TrainStation trainstation);
 	public Optional<StationArrival> getArrivalOfLine(TrainStation station, TrainLine line);
 	
 	// setters
 	public boolean reportTrainPass(TrainPassReport report);
 	public boolean addTrainStation(TrainStation station);
 	public boolean addUserToTrainstation(TrainStation station, User user);
-	public boolean addTrainstationLines(LinesOfTrainstation lines); // unused
+	//public boolean addTrainstationLines(LinesOfTrainstation lines); // unused
 	public boolean addLine(TrainLine line);
 	public boolean removeLine(TrainLine line);
 }

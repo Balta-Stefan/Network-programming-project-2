@@ -6,12 +6,13 @@ public class StationArrival
 {
 	public final TrainStation trainStation;
 	public final LocalDateTime timeOfArrival;
+	public final boolean passed;
 	
-	
-	public StationArrival(TrainStation trainStation, LocalDateTime timeOfArrival)
+	public StationArrival(TrainStation trainStation, LocalDateTime timeOfArrival, boolean passed)
 	{
 		this.trainStation = trainStation;
 		this.timeOfArrival = timeOfArrival;
+		this.passed = passed;
 	}
 
 	@Override

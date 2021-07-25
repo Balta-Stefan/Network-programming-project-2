@@ -13,7 +13,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import mdp2021.backend.GUI.GUI_Controller;
+import mdp2021.backend.GUI.GUI_JavaFX_Controller;
 import mdp2021.backend.GUI.GUI_Starter;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
@@ -133,9 +133,9 @@ public class StartServices
 	
 		
 		// add train station lines
-		StationArrival arrival1 = new StationArrival(station1, null);
-		StationArrival arrival2 = new StationArrival(station2, null);
-		StationArrival arrival3 = new StationArrival(station3, LocalDateTime.now());
+		StationArrival arrival1 = new StationArrival(station1, null, false);
+		StationArrival arrival2 = new StationArrival(station2, null, false);
+		StationArrival arrival3 = new StationArrival(station3, LocalDateTime.now(), false);
 		
 		List<StationArrival> stationArrivals = Arrays.asList(arrival1, arrival2, arrival3);
 		
@@ -221,7 +221,7 @@ public class StartServices
 		UserSessions session = new REDIS_UserSessions(sessionDurationSeconds);
 		User admin = new User(new TrainStation(-1), "admin", "", null);
 		
-		GUI_Controller.adminCookie = session.login(admin);
+		GUI_JavaFX_Controller.adminCookie = session.login(admin);
 		
 		MessageProcessor.initialize(sessionDurationSeconds);
 				

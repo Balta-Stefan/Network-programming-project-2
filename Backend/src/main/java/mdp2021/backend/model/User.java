@@ -6,17 +6,6 @@ public class User
 {
 	//public final int ID;
 	private TrainStation trainStation;
-	public TrainStation getTrainStation()
-	{
-		return trainStation;
-	}
-
-
-	public String getUsername()
-	{
-		return username;
-	}
-
 	private String username;
 	private String password;
 	private byte[] salt;
@@ -31,6 +20,16 @@ public class User
 		this.username = username;
 		this.password = password;
 		this.salt = salt;
+	}
+	
+	public String getUsername()
+	{
+		return username;
+	}
+	
+	public TrainStation getTrainStation()
+	{
+		return trainStation;
 	}
 	
 	public byte[] getSalt()

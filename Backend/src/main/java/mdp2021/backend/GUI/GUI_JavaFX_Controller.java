@@ -41,9 +41,9 @@ import mdp2021.backend.shared.FileHolder;
 
 // USE CLASS Event OVER ActionEvent!!!!
 
-public class GUI_Controller
+public class GUI_JavaFX_Controller
 {
-	private static final Logger log = Logger.getLogger(GUI_Controller.class.getName());
+	private static final Logger log = Logger.getLogger(GUI_JavaFX_Controller.class.getName());
 	static
 	{
 		log.setLevel(Level.FINEST);
@@ -70,7 +70,7 @@ public class GUI_Controller
 	
 	private RMI_services_interface rmiService;
 	
-	public GUI_Controller()
+	public GUI_JavaFX_Controller()
 	{
 		Properties backendProperties = new Properties();
 		
@@ -381,7 +381,7 @@ public class GUI_Controller
     	
     	LocalDateTime dateTime = LocalDateTime.of(date, time);
 
-    	StationArrival arrival = new StationArrival(selectedTrainstation, dateTime);
+    	StationArrival arrival = new StationArrival(selectedTrainstation, dateTime, false);
     	
     	if(lineStopsListviewItems.contains(arrival))
     		return;

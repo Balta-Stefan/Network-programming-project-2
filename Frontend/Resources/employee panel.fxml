@@ -40,7 +40,7 @@
                                           <Insets top="25.0" />
                                        </VBox.margin>
                                     </Label>
-                                    <ListView fx:id="trainLinesList_lineSchedulesTab" onMouseClicked="#trainLineSelected" prefHeight="722.0" prefWidth="413.0" />
+                                    <ListView fx:id="trainLinesListView_lineSchedulesTab" onMouseClicked="#trainLineSelected" prefHeight="722.0" prefWidth="413.0" />
                                  </children>
                               </VBox>
                               <VBox prefHeight="739.0" prefWidth="559.0">
@@ -71,7 +71,7 @@
                               <Insets top="25.0" />
                            </VBox.margin>
                         </Label>
-                        <ListView prefHeight="200.0" prefWidth="200.0" />
+                        <ListView fx:id="trainLinesList_recordTrainPassTab" prefHeight="200.0" prefWidth="200.0" />
                         <TextField promptText="Time of passing (HH:MM:SS)">
                            <VBox.margin>
                               <Insets top="25.0" />

@@ -51,7 +51,7 @@ public class TrainStation implements Serializable
 	@Override
 	public String toString()
 	{
-		return "TrainStation [stationID=" + stationID + "]";
+		return "TrainStation (" + stationID + ")";
 	}
 	
 	

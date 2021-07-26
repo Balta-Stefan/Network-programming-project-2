@@ -1,6 +1,7 @@
 package mdp2021.frontend.GUI;
 
 
+import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.Event;
@@ -28,26 +29,36 @@ public class EmployeePanelController extends BaseFXController
     private Tab chatTab;
 	
     @FXML
+	private Tab lineSchedulesTab;
+    
+    @FXML
 	private Label getLinesStatusLabel;
     
     @FXML
 	private Label logoutSuccessLabel;
 
     @FXML
-    private ListView<TrainLine> trainLinesList_lineSchedulesTab;
-    private ObservableList<TrainLine> trainLinesList_lineSchedulesTabItems;
+    private ListView<TrainLine> trainLinesListView_lineSchedulesTab;
+    private ObservableList<TrainLine> trainLinesListViewItems = FXCollections.observableArrayList();
     
     @FXML
-    private ListView<StationArrival> lineStations_lineSchedulesTab;
-    private ObservableList<StationArrival> lineStations_lineSchedulesTabItems;
+    private ListView<String> lineStations_lineSchedulesTab;
+    private ObservableList<String> lineStations_lineSchedulesTabItems =  FXCollections.observableArrayList();
+    
+    @FXML
+    private ListView<TrainLine> trainLinesList_recordTrainPassTab;
     
     @FXML
     private Button refreshLineSchedulesTabButton;
     
     public void initialize()
     {
-    	trainLinesList_lineSchedulesTabItems = trainLinesList_lineSchedulesTab.getItems();
-    	lineStations_lineSchedulesTabItems = lineStations_lineSchedulesTab.getItems();
+    	//trainLinesListViewItems = trainLinesListView_lineSchedulesTab.getItems();
+    	//lineStations_lineSchedulesTabItems = lineStations_lineSchedulesTab.getItems();
+    	trainLinesListView_lineSchedulesTab.setItems(trainLinesListViewItems);
+    	trainLinesList_recordTrainPassTab.setItems(trainLinesListViewItems);
+    	
+    	lineStations_lineSchedulesTab.setItems(lineStations_lineSchedulesTabItems);
     }
 	
 
@@ -60,17 +71,19 @@ public class EmployeePanelController extends BaseFXController
     @FXML
     void trainLineSelected(Event event)
     {
-    	int selectedIndex = trainLinesList_lineSchedulesTab.getSelectionModel().getSelectedIndex();
+    	int selectedIndex = trainLinesListView_lineSchedulesTab.getSelectionModel().getSelectedIndex();
     	if(selectedIndex == -1)
     		return;
     	
     	lineStations_lineSchedulesTabItems.clear();
     	
-    	TrainLine selectedLine = trainLinesList_lineSchedulesTabItems.get(selectedIndex);
+    	TrainLine selectedLine = trainLinesListViewItems.get(selectedIndex);
     	
     	for(StationArrival arrival : selectedLine.stationArrivals)
     	{
-    		lineStations_lineSchedulesTabItems.add(arrival);
+    		String suffix = (arrival.passed == true) ? "yes" : "no";
+    		String value = "station: " + arrival.trainStation.getID() + ", time of passing: " + arrival.timeOfArrival + ", arrived: " + suffix;
+    		lineStations_lineSchedulesTabItems.add(value);
     	}
     }
     
@@ -95,10 +108,10 @@ public class EmployeePanelController extends BaseFXController
     		refreshLineSchedulesTabButton.setDisable(false);
     		
     		LinesOfTrainstation lines = tempTask.getValue();
-    		trainLinesList_lineSchedulesTabItems.clear();
+    		trainLinesListViewItems.clear();
     		for(TrainLine line : lines.linesThroughStation)
 	    	{
-	    		trainLinesList_lineSchedulesTabItems.add(line);
+	    		trainLinesListViewItems.add(line);
 	    	}
     	});
     	

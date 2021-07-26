@@ -7,8 +7,8 @@
   <ns1:parameter name="dotNetSoapEncFix" value="true"/>
   <ns1:parameter name="enableNamespacePrefixOptimization" value="false"/>
   <ns1:parameter name="sendXMLDeclaration" value="true"/>
-  <ns1:parameter name="sendXsiTypes" value="true"/>
   <ns1:parameter name="attachments.implementation" value="org.apache.axis.attachments.AttachmentsImpl"/>
+  <ns1:parameter name="sendXsiTypes" value="true"/>
   <ns1:requestFlow>
    <ns1:handler type="java:org.apache.axis.handlers.JWSHandler">
     <ns1:parameter name="scope" value="session"/>
@@ -33,15 +33,27 @@
   <ns1:parameter name="className" value="org.apache.axis.Version"/>
  </ns1:service>
  <ns1:service name="SOAP_service" provider="java:RPC" style="wrapped" use="literal">
-  <ns2:operation name="getMsg" qname="ns1:getMsg" returnQName="ns1:getMsgReturn" returnType="xsd:string" soapAction="" xmlns:ns1="http://SOAP.services.backend.mdp2021" xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:ns2="http://xml.apache.org/axis/wsdd/"/>
-  <ns1:parameter name="allowedMethods" value="getMsg"/>
+  <ns3:operation name="login" qname="ns1:login" returnQName="ns1:loginReturn" returnType="ns2:LoginReply" soapAction="" xmlns:ns1="http://SOAP.services.backend.mdp2021" xmlns:ns2="http://shared.backend.mdp2021" xmlns:ns3="http://xml.apache.org/axis/wsdd/">
+   <ns3:parameter qname="ns1:username" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema"/>
+   <ns3:parameter qname="ns1:password" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema"/>
+  </ns3:operation>
+  <ns1:operation name="logout" qname="ns3:logout" returnQName="ns3:logoutReturn" returnType="ns4:Code_response" soapAction="" xmlns:ns3="http://SOAP.services.backend.mdp2021" xmlns:ns4="http://shared.backend.mdp2021">
+   <ns1:parameter qname="ns3:cookie" type="xsd:string" xmlns:xsd="http://www.w3.org/2001/XMLSchema"/>
+  </ns1:operation>
+  <ns1:operation name="getTrainstationUsers" qname="ns5:getTrainstationUsers" returnQName="ns5:getTrainstationUsersReturn" returnType="xsd:string" soapAction="" xmlns:ns5="http://SOAP.services.backend.mdp2021" xmlns:xsd="http://www.w3.org/2001/XMLSchema">
+   <ns1:parameter qname="ns5:cookie" type="xsd:string"/>
+  </ns1:operation>
+  <ns1:parameter name="allowedMethods" value="logout getTrainstationUsers login"/>
   <ns1:parameter name="typeMappingVersion" value="1.2"/>
   <ns1:parameter name="wsdlPortType" value="SOAP_service"/>
   <ns1:parameter name="className" value="mdp2021.backend.services.SOAP.SOAP_service"/>
   <ns1:parameter name="wsdlServicePort" value="SOAP_service"/>
-  <ns1:parameter name="schemaQualified" value="http://SOAP.services.backend.mdp2021"/>
+  <ns1:parameter name="schemaQualified" value="http://shared.backend.mdp2021,http://SOAP.services.backend.mdp2021,http://model.backend.mdp2021"/>
   <ns1:parameter name="wsdlTargetNamespace" value="http://SOAP.services.backend.mdp2021"/>
   <ns1:parameter name="wsdlServiceElement" value="SOAP_serviceService"/>
+  <ns1:typeMapping deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory" encodingStyle="" qname="ns6:LoginReply" serializer="org.apache.axis.encoding.ser.BeanSerializerFactory" type="java:mdp2021.backend.shared.LoginReply" xmlns:ns6="http://shared.backend.mdp2021"/>
+  <ns1:typeMapping deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory" encodingStyle="" qname="ns7:TrainStation" serializer="org.apache.axis.encoding.ser.BeanSerializerFactory" type="java:mdp2021.backend.model.TrainStation" xmlns:ns7="http://model.backend.mdp2021"/>
+  <ns1:typeMapping deserializer="org.apache.axis.encoding.ser.BeanDeserializerFactory" encodingStyle="" qname="ns8:Code_response" serializer="org.apache.axis.encoding.ser.BeanSerializerFactory" type="java:mdp2021.backend.shared.Code_response" xmlns:ns8="http://shared.backend.mdp2021"/>
  </ns1:service>
  <ns1:transport name="http">
   <ns1:requestFlow>

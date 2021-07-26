@@ -1,6 +1,8 @@
 package mdp2021.backend.model;
 
-public class TrainStation
+import java.io.Serializable;
+
+public class TrainStation implements Serializable
 {
 	private int stationID;
 	//public final String stationName;
@@ -10,6 +12,11 @@ public class TrainStation
 	public TrainStation(int stationID)
 	{
 		this.stationID = stationID;
+	}
+	
+	public void setID(int ID)
+	{
+		stationID = ID;
 	}
 	
 	public int getID()

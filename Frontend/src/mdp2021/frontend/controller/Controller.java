@@ -3,6 +3,7 @@ package mdp2021.frontend.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.util.Properties;
@@ -11,8 +12,15 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import javax.xml.rpc.ServiceException;
+
 import mdp2021.backend.GUI.GUI_JavaFX_Controller;
+import mdp2021.backend.model.TrainStation;
 import mdp2021.backend.services.RMI.RMI_services_interface;
+import mdp2021.backend.services.SOAP.SOAP_service;
+import mdp2021.backend.services.SOAP.SOAP_serviceServiceLocator;
+import mdp2021.backend.shared.Code_response;
+import mdp2021.backend.shared.LoginReply;
 
 public class Controller
 {
@@ -43,10 +51,15 @@ public class Controller
 	private final int RMI_port;
 	
 	private RMI_services_interface rmiService;
+	private SOAP_service soapService;
+	
+	
+	private String cookie;
+	private TrainStation trainstationInfo;
 	
 	private void RMI_Init()
 	{
-		System.setProperty("java.security.policy", "./Resources/client_policyfile.txt");
+		System.setProperty("java.security.policy", "Resources/client_policyfile.txt");
 		
 		if(System.getSecurityManager() == null)
 			System.setSecurityManager(new SecurityManager());
@@ -62,9 +75,18 @@ public class Controller
 		}
 	}
 	
-	private void loadGUI()
+	private void SOAP_init()
 	{
-	
+		SOAP_serviceServiceLocator locator = new SOAP_serviceServiceLocator();
+		
+		try
+		{
+			soapService = locator.getSOAP_service();
+		}
+		catch (ServiceException e)
+		{
+			log.severe(e.getMessage());
+		}
 	}
 	
 	public Controller()
@@ -88,7 +110,27 @@ public class Controller
 		
 		// perform intialization for RMI
 		RMI_Init();
+		SOAP_init();
+	}
+	
+	public LoginReply login(String username, String password) throws RemoteException
+	{
+		LoginReply reply = soapService.login(username, password);
 		
-		loadGUI();
+		cookie = reply.getCookie();
+    	trainstationInfo = reply.getTrainstationInfo();
+    	
+    	return reply;
+	}
+
+	public Code_response logout() throws RemoteException
+	{
+		Code_response response = soapService.logout(cookie);
+		return response;
+	}
+	
+	public int getTrainstationID()
+	{
+		return trainstationInfo.getID();
 	}
 }

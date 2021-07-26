@@ -212,8 +212,7 @@ public class StartServices
 		
 		// start the socket service - to do
 		
-		
-		
+
 		
 		// create administrator session and pass the cookie to the GUI
 		

@@ -15,6 +15,8 @@ import java.util.logging.SimpleFormatter;
 
 import mdp2021.backend.model.User;
 
+// java.beans.XMLDecoder and XMLEncoder serialize private fields only if they have setters (and probably getters)
+
 public class XML_UserDAO implements IUserDAO
 {
 	private static final Logger log = Logger.getLogger(XML_UserDAO.class.getName());

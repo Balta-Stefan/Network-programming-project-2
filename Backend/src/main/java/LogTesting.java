@@ -1,8 +1,11 @@
+import java.io.File;
 import java.io.IOException;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+
+import mdp2021.backend.utilities.REDIS_CustomPool;
 
 
 public class LogTesting
@@ -37,6 +40,5 @@ public class LogTesting
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		
 	}
 }

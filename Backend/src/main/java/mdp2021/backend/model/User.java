@@ -1,8 +1,8 @@
 package mdp2021.backend.model;
 
+import java.io.Serializable;
 
-
-public class User
+public class User implements Serializable
 {
 	//public final int ID;
 	private TrainStation trainStation;
@@ -20,6 +20,17 @@ public class User
 		this.username = username;
 		this.password = password;
 		this.salt = salt;
+	}
+	
+	public void setTrainStation(TrainStation trainStation)
+	{
+		this.trainStation = trainStation;
+	}
+
+
+	public void setUsername(String username)
+	{
+		this.username = username;
 	}
 	
 	public String getUsername()

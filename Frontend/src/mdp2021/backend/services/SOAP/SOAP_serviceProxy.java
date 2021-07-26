@@ -44,16 +44,16 @@ public class SOAP_serviceProxy implements mdp2021.backend.services.SOAP.SOAP_ser
     return sOAP_service;
   }
   
-  public mdp2021.backend.shared.Code_response logout(java.lang.String cookie) throws java.rmi.RemoteException{
-    if (sOAP_service == null)
-      _initSOAP_serviceProxy();
-    return sOAP_service.logout(cookie);
-  }
-  
   public mdp2021.backend.shared.LoginReply login(java.lang.String username, java.lang.String password) throws java.rmi.RemoteException{
     if (sOAP_service == null)
       _initSOAP_serviceProxy();
     return sOAP_service.login(username, password);
+  }
+  
+  public mdp2021.backend.shared.Code_response logout(java.lang.String cookie) throws java.rmi.RemoteException{
+    if (sOAP_service == null)
+      _initSOAP_serviceProxy();
+    return sOAP_service.logout(cookie);
   }
   
   public java.lang.String getTrainstationUsers(java.lang.String cookie) throws java.rmi.RemoteException{

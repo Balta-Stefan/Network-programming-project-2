@@ -1,5 +1,6 @@
 package mdp2021.backend.services.SOAP;
 
+import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import java.util.Optional;
@@ -27,6 +28,7 @@ public final class SOAP_service
 	//private static final String propertiesPath = ".\\Resources\\backend constants.properties";
 	//private static final String userSessionDurationProperty = "userSessionDuration";
 	private static final Logger log = Logger.getLogger(SOAP_service.class.getName());
+	private static final String pathPrefix = "D:\\Knjige za fakultet\\3. godina\\6. semestar\\Mrezno i distribuirano programiranje\\Projekat\\Source 2\\Backend";
 	static
 	{
 		log.setLevel(Level.FINEST);
@@ -44,9 +46,7 @@ public final class SOAP_service
 	}
 	
 	private static final int sessionDurationSeconds = 7200;
-	
-	private static final String pathPrefix = "D:\\Knjige za fakultet\\3. godina\\6. semestar\\Mrezno i distribuirano programiranje\\Projekat\\Source\\Backend\\";
-	private static final IUserDAO userDatabase = new XML_UserDAO(pathPrefix + "Application data\\Users\\");
+	private static final IUserDAO userDatabase = new XML_UserDAO(pathPrefix + "\\Application data\\Users\\");
 	
 
 	/*static
@@ -100,7 +100,7 @@ public final class SOAP_service
 		
 		
 		UserSessions sessions = new REDIS_UserSessions(sessionDurationSeconds);
-		cookie = sessions.login(user.get());
+		cookie = sessions.login(userInfo);
 		
 		
 		return new LoginReply(new Code_response(200, "Success"), userInfo.getTrainStation(), cookie);

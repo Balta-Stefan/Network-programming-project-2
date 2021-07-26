@@ -1,8 +1,10 @@
 package mdp2021.backend.shared;
 
+import java.io.Serializable;
+
 import mdp2021.backend.model.TrainStation;
 
-public class LoginReply
+public class LoginReply implements Serializable
 {
 	public Code_response codeResponse;
 	public TrainStation trainstationInfo;

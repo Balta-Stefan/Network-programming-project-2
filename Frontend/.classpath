@@ -13,5 +13,6 @@
 	<classpathentry kind="lib" path="C:/Users/Korisnik/.p2/pool/plugins/javax.wsdl_1.6.2.v201012040545.jar"/>
 	<classpathentry kind="lib" path="C:/Users/Korisnik/.p2/pool/plugins/org.apache.commons.logging_1.2.0.v20180409-1502.jar"/>
 	<classpathentry combineaccessrules="false" kind="src" path="/MDP2021 backend"/>
+	<classpathentry kind="con" path="org.eclipse.jdt.USER_LIBRARY/JavaFX"/>
 	<classpathentry kind="output" path="bin"/>
 </classpath>

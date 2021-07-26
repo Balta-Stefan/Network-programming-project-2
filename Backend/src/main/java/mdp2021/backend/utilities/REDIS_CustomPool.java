@@ -20,7 +20,7 @@ public class REDIS_CustomPool
 		log.setLevel(Level.FINEST);
 		FileHandler txtHandler;
 		try
-		{
+		{		
 			txtHandler = new FileHandler("Logs/REDIS_CustomPool.txt", true);
 			SimpleFormatter txtFormatter = new SimpleFormatter();
 			txtHandler.setFormatter(txtFormatter);

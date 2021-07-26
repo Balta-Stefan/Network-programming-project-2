@@ -8,7 +8,7 @@
 package mdp2021.backend.services.SOAP;
 
 public interface SOAP_service extends java.rmi.Remote {
-    public mdp2021.backend.shared.Code_response logout(java.lang.String cookie) throws java.rmi.RemoteException;
     public mdp2021.backend.shared.LoginReply login(java.lang.String username, java.lang.String password) throws java.rmi.RemoteException;
+    public mdp2021.backend.shared.Code_response logout(java.lang.String cookie) throws java.rmi.RemoteException;
     public java.lang.String getTrainstationUsers(java.lang.String cookie) throws java.rmi.RemoteException;
 }

@@ -1,6 +1,5 @@
 package mdp2021.backend.persistence;
 
-import java.io.File;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -110,10 +109,10 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 				Map<String, String> lineData = jedis.hgetAll(s);
 				
 				String lineRepresentation = lineData.get("representation");
-				int lineID = Integer.parseInt(s.substring(s.indexOf(":") + 1));
+				int lineID = Integer.parseInt(s.substring(5)); // extract ID from string line:someID
 				List<StationArrival> stationArrivals = new ArrayList<>();
 				
-				lineData.remove(lineRepresentation);
+				lineData.remove("representation");
 				Set<String> lineDataKeys = lineData.keySet();
 				
 				for(String station : lineDataKeys)
@@ -121,10 +120,8 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 					// vrijednosti: station:stationID
 					// kljucevi: vrijeme prolaska
 					
-					int semicolumnIndex = station.indexOf(":");
-					
-					// the assumption is that all keys are valid
-					int stationID = Integer.parseInt(station.substring(semicolumnIndex+1));
+					// the assumption is that all keys are valid (are of the form station:stationID)
+					int stationID = Integer.parseInt(station.substring(8));
 					
 					String arrivalInfo = lineData.get(station);
 					boolean passed = (arrivalInfo.charAt(0) == 'P') ? true : false;

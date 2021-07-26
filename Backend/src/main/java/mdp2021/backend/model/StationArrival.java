@@ -4,9 +4,11 @@ import java.time.LocalDateTime;
 
 public class StationArrival
 {
-	public final TrainStation trainStation;
-	public final LocalDateTime timeOfArrival;
-	public final boolean passed;
+	public TrainStation trainStation;
+	public LocalDateTime timeOfArrival;
+	public boolean passed;
+	
+	public StationArrival() {}
 	
 	public StationArrival(TrainStation trainStation, LocalDateTime timeOfArrival, boolean passed)
 	{
@@ -18,7 +20,8 @@ public class StationArrival
 	@Override
 	public String toString()
 	{
-		return "StationArrival [trainStation=" + trainStation + ", timeOfArrival=" + timeOfArrival + "]";
+		String suffix = (passed == true) ? "Passed" : "Hasn't passed";
+		return "[train station=" + trainStation + ", timeOfArrival=" + timeOfArrival + ", " + suffix + "]";
 	}
 
 	@Override

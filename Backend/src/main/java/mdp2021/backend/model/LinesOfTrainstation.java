@@ -4,9 +4,10 @@ import java.util.List;
 
 public class LinesOfTrainstation
 {
-	public final TrainStation trainStation;
-	public final List<TrainLine> linesThroughStation;
+	public TrainStation trainStation;
+	public List<TrainLine> linesThroughStation;
 	
+	public LinesOfTrainstation() {}
 	
 	public LinesOfTrainstation(TrainStation trainStation, List<TrainLine> linesThroughStation)
 	{

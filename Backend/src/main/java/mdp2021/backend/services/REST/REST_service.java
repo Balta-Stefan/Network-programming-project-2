@@ -1,13 +1,12 @@
 package mdp2021.backend.services.REST;
 
-import javax.ws.rs.Path;
-
 import java.util.Optional;
 
 import javax.ws.rs.Consumes;
 import javax.ws.rs.CookieParam;
 import javax.ws.rs.GET;
 import javax.ws.rs.PUT;
+import javax.ws.rs.Path;
 import javax.ws.rs.Produces;
 import javax.ws.rs.core.Cookie;
 import javax.ws.rs.core.MediaType;

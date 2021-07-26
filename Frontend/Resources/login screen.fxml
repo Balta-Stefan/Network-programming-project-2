@@ -39,7 +39,7 @@
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.VBox?>
 
-<VBox alignment="TOP_CENTER" prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mdp2021.frontend.GUI.Frontend_JavaFX_Controller">
+<VBox alignment="TOP_CENTER" prefHeight="400.0" prefWidth="640.0" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mdp2021.frontend.GUI.LoginScreenController">
    <children>
       <Label text="Username" />
       <TextField fx:id="usernameInput" />
@@ -50,7 +50,7 @@
             <Insets top="25.0" />
          </VBox.margin>
       </Button>
-      <Label fx:id="loginStatusLabel" text="Status:">
+      <Label fx:id="loginStatusLabel">
          <VBox.margin>
             <Insets top="25.0" />
          </VBox.margin></Label>

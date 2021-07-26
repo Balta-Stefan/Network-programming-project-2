@@ -4,10 +4,11 @@ import java.util.List;
 
 public class TrainLine
 {
-	public final int lineID;
-	public final String line;
-	public final List<StationArrival> stationArrivals;
+	public int lineID;
+	public String line;
+	public List<StationArrival> stationArrivals;
 	
+	public TrainLine() {}
 	
 	public TrainLine(int lineID, String line, List<StationArrival> stationArrivals)
 	{

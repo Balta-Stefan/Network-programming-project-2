@@ -6,15 +6,24 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import javax.ws.rs.client.Client;
+import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Invocation;
+import javax.ws.rs.client.WebTarget;
+import javax.ws.rs.core.Cookie;
+import javax.ws.rs.core.MediaType;
+import javax.ws.rs.core.Response;
 import javax.xml.rpc.ServiceException;
 
 import mdp2021.backend.GUI.GUI_JavaFX_Controller;
+import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.TrainStation;
 import mdp2021.backend.services.RMI.RMI_services_interface;
 import mdp2021.backend.services.SOAP.SOAP_service;
@@ -24,6 +33,7 @@ import mdp2021.backend.shared.LoginReply;
 
 public class Controller
 {
+	private static final String apiURL = "http://localhost:8080/MDP2021_backend/api/v1";
 	private static final Logger log = Logger.getLogger(GUI_JavaFX_Controller.class.getName());
 	static
 	{
@@ -53,6 +63,9 @@ public class Controller
 	private RMI_services_interface rmiService;
 	private SOAP_service soapService;
 	
+	// REST related
+	private static final Client client = ClientBuilder.newClient();
+	private static final WebTarget webTarget = client.target(apiURL);
 	
 	private String cookie;
 	private TrainStation trainstationInfo;
@@ -113,12 +126,21 @@ public class Controller
 		SOAP_init();
 	}
 	
+	private void postLoginActions()
+	{
+		// to do
+		
+	}
+	
 	public LoginReply login(String username, String password) throws RemoteException
 	{
 		LoginReply reply = soapService.login(username, password);
 		
 		cookie = reply.getCookie();
     	trainstationInfo = reply.getTrainstationInfo();
+    	
+    	if(reply.getCodeResponse().getCode() == 200)
+    		postLoginActions();
     	
     	return reply;
 	}
@@ -132,5 +154,19 @@ public class Controller
 	public int getTrainstationID()
 	{
 		return trainstationInfo.getID();
+	}
+
+	public LinesOfTrainstation getLines()
+	{
+		WebTarget lineWebTarget = webTarget.path("train-schedule");
+		
+		Invocation.Builder invocationBuilder = lineWebTarget.request(MediaType.APPLICATION_JSON);
+		
+		Cookie cookieObject = new Cookie("cookie", cookie);
+		invocationBuilder.cookie(cookieObject);
+		
+		Response response = invocationBuilder.get();
+		
+		return response.readEntity(LinesOfTrainstation.class);
 	}
 }

@@ -13,40 +13,54 @@
 <?import javafx.scene.layout.HBox?>
 <?import javafx.scene.layout.VBox?>
 
-<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0" prefWidth="1024.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mdp2021.frontend.GUI.Frontend_JavaFX_Controller">
+<TabPane maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="768.0" prefWidth="1024.0" tabClosingPolicy="UNAVAILABLE" xmlns="http://javafx.com/javafx/16" xmlns:fx="http://javafx.com/fxml/1" fx:controller="mdp2021.frontend.GUI.EmployeePanelController">
   <tabs>
-    <Tab text="Line schedules">
+    <Tab fx:id="lineSchedulesTab" text="Line schedules">
       <content>
         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                <children>
-                  <HBox layoutX="260.0" layoutY="179.0" prefHeight="739.0" prefWidth="1024.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                  <VBox alignment="CENTER" prefHeight="739.0" prefWidth="1024.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
-                        <VBox prefHeight="739.0" prefWidth="466.0">
+                        <Button fx:id="refreshLineSchedulesTabButton" mnemonicParsing="false" onAction="#refreshLineSchedulesTab" text="Refresh">
+                           <VBox.margin>
+                              <Insets top="25.0" />
+                           </VBox.margin>
+                        </Button>
+                        <Label fx:id="getLinesStatusLabel">
+                           <VBox.margin>
+                              <Insets left="25.0" top="25.0" />
+                           </VBox.margin>
+                        </Label>
+                        <HBox prefHeight="739.0" prefWidth="1024.0">
                            <children>
-                              <Label text="Train lines list:">
-                                 <VBox.margin>
-                                    <Insets top="25.0" />
-                                 </VBox.margin>
-                              </Label>
-                              <ListView prefHeight="722.0" prefWidth="413.0" />
+                              <VBox prefHeight="739.0" prefWidth="466.0">
+                                 <children>
+                                    <Label text="Train lines list:">
+                                       <VBox.margin>
+                                          <Insets top="25.0" />
+                                       </VBox.margin>
+                                    </Label>
+                                    <ListView fx:id="trainLinesList_lineSchedulesTab" onMouseClicked="#trainLineSelected" prefHeight="722.0" prefWidth="413.0" />
+                                 </children>
+                              </VBox>
+                              <VBox prefHeight="739.0" prefWidth="559.0">
+                                 <children>
+                                    <Label text="Stations from the line:">
+                                       <VBox.margin>
+                                          <Insets top="25.0" />
+                                       </VBox.margin>
+                                    </Label>
+                                    <ListView fx:id="lineStations_lineSchedulesTab" prefHeight="723.0" prefWidth="559.0" />
+                                 </children>
+                              </VBox>
                            </children>
-                        </VBox>
-                        <VBox prefHeight="739.0" prefWidth="559.0">
-                           <children>
-                              <Label text="Stations from the line:">
-                                 <VBox.margin>
-                                    <Insets top="25.0" />
-                                 </VBox.margin>
-                              </Label>
-                              <ListView prefHeight="723.0" prefWidth="559.0" />
-                           </children>
-                        </VBox>
+                        </HBox>
                      </children>
-                  </HBox>
+                  </VBox>
                </children></AnchorPane>
       </content>
     </Tab>
-    <Tab text="Record train pass">
+    <Tab fx:id="recordTrainPassTab" onSelectionChanged="#activateRecordTrainPassTab" text="Record train pass">
       <content>
         <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                <children>
@@ -78,7 +92,7 @@
                </children></AnchorPane>
       </content>
     </Tab>
-      <Tab text="Announcements">
+      <Tab fx:id="announcementsTab" onSelectionChanged="#activateAnnouncementsTab" text="Announcements">
         <content>
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                <children>
@@ -144,7 +158,7 @@
             </AnchorPane>
         </content>
       </Tab>
-      <Tab text="Chat">
+      <Tab fx:id="chatTab" onSelectionChanged="#activateChatTab" text="Chat">
         <content>
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                <children>

@@ -1,6 +1,11 @@
 package mdp2021.backend.persistence;
 
 
+import java.io.File;
+import java.io.IOException;
+import java.nio.charset.Charset;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -10,12 +15,6 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import com.google.gson.Gson;
-
-import java.io.File;
-import java.io.IOException;
-import java.nio.charset.Charset;
-import java.nio.charset.StandardCharsets;
-import java.nio.file.Files;
 
 import mdp2021.backend.shared.FileHolder;
 

@@ -27,10 +27,10 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
 import mdp2021.backend.model.TrainLine;
-import mdp2021.backend.model.TrainStation;
 import mdp2021.backend.model.TrainstationUsers;
 import mdp2021.backend.model.User;
 import mdp2021.backend.shared.Code_response;
+
 
 public class EmployeePanelController extends BaseFXController
 {
@@ -117,7 +117,12 @@ public class EmployeePanelController extends BaseFXController
     @FXML
     void chat_stationSelect(Event event)
     {
-    	System.out.println("I have selected trainstation combobox in chat");
+    	TrainstationUsers selectedStation = chatTrainstationsComboBox.getSelectionModel().getSelectedItem();
+    	if(selectedStation == null)
+    		return;
+    	
+    	chatUsersComboBox.getItems().clear();
+    	chatUsersComboBox.getItems().addAll(selectedStation.users);
     }
     
     @FXML

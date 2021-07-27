@@ -10,6 +10,7 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -432,7 +433,7 @@ public class GUI_JavaFX_Controller
     @FXML
     void addLine(Event event)
     {
-    	Optional<TrainLine> newTrainLine = TrainstationsController.addLinesToTrainstation(lineStopsListviewItems);
+    	Optional<TrainLine> newTrainLine = TrainstationsController.addLinesToTrainstation(new ArrayList<>(lineStopsListView.getItems()));
     	
     	if(newTrainLine.isEmpty() == false)
     	{
@@ -482,6 +483,19 @@ public class GUI_JavaFX_Controller
     		lineOperationStatusLabel.setText("Line not removed");
     		lineOperationStatusLabel.setTextFill(Color.RED);
     	}
+    }
+    
+    @FXML
+    void showTrainLineData(Event event)
+    {
+    	int selectedIndex = trainLinesListView.getSelectionModel().getSelectedIndex();
+    	if(selectedIndex == -1)
+    		return;
+    	
+    	lineStopsListviewItems.clear();
+    	
+    	TrainLine selectedTrainLine = trainLinesListViewItems.get(selectedIndex);
+    	lineStopsListviewItems.addAll(selectedTrainLine.stationArrivals);
     }
     
     private TrainStation getSelectedTrainstation_linesTab()
@@ -575,7 +589,26 @@ public class GUI_JavaFX_Controller
     	
     	reportNameInput.setText(file.metadata.fileName);
     	reportUploaderInput.setText(file.metadata.username);
-    	reportFilesizeInput.setText(Integer.toString(file.metadata.fileSize));
+    	
+    	int fileSize = file.metadata.fileSize; //Integer.toString(file.metadata.fileSize);
+    	int newSize = 0;
+    	
+    	
+    	String sizeSuffix = " MiB";
+    	newSize = fileSize / (1024 * 1024);
+    	if(newSize == 0)
+    	{
+    		newSize = fileSize / 1024;
+    		sizeSuffix = " KiB";
+    		
+    		if(newSize == 0)
+    		{
+    			newSize = fileSize;
+    			sizeSuffix = " B";
+    		}
+    	}
+    	
+    	reportFilesizeInput.setText(Integer.toString(newSize) + sizeSuffix);
     	reportUploadTimestamp.setText(file.metadata.dateTime);
     }
 

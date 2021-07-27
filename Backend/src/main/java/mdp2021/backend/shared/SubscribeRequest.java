@@ -4,6 +4,11 @@ import java.io.Serializable;
 
 public class SubscribeRequest extends Message implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public static enum Type{SUBSCRIBE, UNSUBSCRIBE}
 	public final Type type;
 

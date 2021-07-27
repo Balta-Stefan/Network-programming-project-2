@@ -8,7 +8,11 @@
 package mdp2021.backend.model;
 
 public class TrainStation  implements java.io.Serializable {
-    private int ID;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+	private int ID;
 
     public TrainStation() {
     }

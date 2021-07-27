@@ -1,6 +1,7 @@
 package mdp2021.frontend.GUI;
 
 
+import java.io.File;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -11,12 +12,15 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.fxml.FXML;
+import javafx.scene.Node;
 import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
+import javafx.stage.FileChooser;
+import javafx.stage.FileChooser.ExtensionFilter;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
 import mdp2021.backend.model.TrainLine;
@@ -24,6 +28,7 @@ import mdp2021.backend.shared.Code_response;
 
 public class EmployeePanelController extends BaseFXController
 {
+	private File chosenReport;
 
     @FXML
     private Tab recordTrainPassTab;
@@ -44,6 +49,9 @@ public class EmployeePanelController extends BaseFXController
 	private Label logoutSuccessLabel;
 
     @FXML
+    private Label selectedFileLabel;
+    
+    @FXML
     private ListView<TrainLine> trainLinesListView_lineSchedulesTab;
     private ObservableList<TrainLine> trainLinesListViewItems = FXCollections.observableArrayList();
     
@@ -61,7 +69,13 @@ public class EmployeePanelController extends BaseFXController
     private Button refreshLinesList_recordTab;
     
     @FXML
+    private Button sendReportButton;
+    
+    @FXML
     private Label recordTrainPassStatusLabel;
+    
+    @FXML
+    private Label reportUploadStatusLabel;
     
     @FXML
     private TextField recordTrainPass_timeInput;
@@ -291,4 +305,60 @@ public class EmployeePanelController extends BaseFXController
 		executor.submit(tempTask);
     }
 
+    @FXML
+    void openFilePicker(Event event)
+    {
+    	FileChooser fileChooser = new FileChooser();
+    	
+    	fileChooser.getExtensionFilters().add(new ExtensionFilter("File type:" , "*.pdf"));
+    	chosenReport = fileChooser.showOpenDialog(((Node)(event.getSource())).getScene().getWindow());
+    	
+    	selectedFileLabel.setText(chosenReport.getAbsolutePath());
+    }
+    
+    @FXML
+    void sendReport(Event event)
+    {
+    	Task<Code_response> tempTask = new Task<Code_response>() 
+    	{
+			@Override
+			protected Code_response call() throws Exception
+			{
+				return frontendController.uploadReport(chosenReport);
+			}
+    	};
+    	
+    	tempTask.setOnRunning((runningEvent)->
+    	{
+    		sendReportButton.setDisable(true);
+    	});
+    	
+    	tempTask.setOnFailed((failedEvent)->
+    	{
+    		reportUploadStatusLabel.setText("Error");
+    		reportUploadStatusLabel.setTextFill(Color.RED);
+    		
+    		sendReportButton.setDisable(false);
+    	});
+    	
+    	tempTask.setOnSucceeded((successEvent)->
+    	{
+    		sendReportButton.setDisable(false);
+    		
+    		Code_response response = tempTask.getValue();
+    		
+    		if(response.getCode() / 100 != 2) // any code other than 2xx is error
+    		{
+    			reportUploadStatusLabel.setText(response.getMessage());
+    			reportUploadStatusLabel.setTextFill(Color.RED);
+    		}
+    		else
+    		{
+    			reportUploadStatusLabel.setText(response.getMessage());
+    			reportUploadStatusLabel.setTextFill(Color.GREEN);
+    		}
+    	});
+    	
+    	executor.submit(tempTask);
+    }
 }

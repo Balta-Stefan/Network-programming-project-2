@@ -6,6 +6,10 @@ import mdp2021.backend.model.TrainStation;
 
 public class LoginReply implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	public Code_response codeResponse;
 	public TrainStation trainstationInfo;
 	public String cookie;

@@ -110,7 +110,7 @@
                               </HBox>
                               <HBox prefHeight="385.0" prefWidth="1094.0">
                                  <children>
-                                    <ListView fx:id="trainLinesListView" maxHeight="-Infinity" prefHeight="303.0" prefWidth="389.0">
+                                    <ListView fx:id="trainLinesListView" maxHeight="-Infinity" onMouseClicked="#showTrainLineData" prefHeight="303.0" prefWidth="389.0">
                                        <HBox.margin>
                                           <Insets left="14.0" />
                                        </HBox.margin>

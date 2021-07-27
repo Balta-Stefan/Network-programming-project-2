@@ -5,6 +5,10 @@ import java.util.List;
 
 public class FileOrTextMessage extends Message implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	public final String message;
 	public final List<FileHolder> files;
 	public final String receiver_username;

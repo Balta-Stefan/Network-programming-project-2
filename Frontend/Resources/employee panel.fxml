@@ -149,14 +149,23 @@
                <children>
                   <VBox alignment="TOP_CENTER" layoutX="308.0" layoutY="114.0" prefHeight="739.0" prefWidth="1024.0" spacing="25.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
-                        <Button mnemonicParsing="false" text="Select file">
+                        <Button mnemonicParsing="false" onAction="#openFilePicker" text="Select file">
                            <VBox.margin>
                               <Insets top="25.0" />
                            </VBox.margin>
                         </Button>
-                        <Label text="Selected file:" />
-                        <Button mnemonicParsing="false" text="Send report" />
-                        <Label text="Status:" />
+                        <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0">
+                           <children>
+                              <Label text="Selected file:" />
+                              <Label fx:id="selectedFileLabel">
+                                 <HBox.margin>
+                                    <Insets left="13.0" />
+                                 </HBox.margin>
+                              </Label>
+                           </children>
+                        </HBox>
+                        <Button fx:id="sendReportButton" mnemonicParsing="false" onAction="#sendReport" text="Send report" />
+                        <Label fx:id="reportUploadStatusLabel" />
                      </children>
                   </VBox>
                </children>

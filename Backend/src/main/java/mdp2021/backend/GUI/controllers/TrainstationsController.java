@@ -1,13 +1,10 @@
 package mdp2021.backend.GUI.controllers;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -42,8 +39,7 @@ public class TrainstationsController
 	private static final ITrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
 	//private static HashMap<TrainStation, TrainStation> trainStations = new HashMap<>();
 
-	
-	private static AtomicInteger availableLineID = new AtomicInteger(1);
+	//private static AtomicInteger availableLineID = new AtomicInteger(1);
 	
 	public static Optional<List<TrainStation>> getTrainStations()
 	{
@@ -95,7 +91,7 @@ public class TrainstationsController
 	{
 		try
 		{
-			int lineID = availableLineID.getAndIncrement();
+			//int lineID = availableLineID.getAndIncrement();
 			
 			StringBuilder builder = new StringBuilder();
 			int i = 0;
@@ -103,12 +99,10 @@ public class TrainstationsController
 				builder.append(lines.get(i).trainStation.getID() + "-");
 			builder.append(lines.get(i).trainStation.getID());
 			
-			TrainLine line = new TrainLine(lineID, builder.toString(), lines);
-			boolean status = trainstationPersistence.addLine(line);
+			TrainLine line = new TrainLine(0, builder.toString(), lines);
+			TrainLine newLine = trainstationPersistence.addLine(line);
 			
-			if(status == true)
-				return  Optional.of(line);
-			return Optional.empty();
+			return  Optional.of(newLine);
 		}
 		catch(Exception e)
 		{

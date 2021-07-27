@@ -8,7 +8,12 @@
 package mdp2021.backend.shared;
 
 public class LoginReply  implements java.io.Serializable {
-    private mdp2021.backend.shared.Code_response codeResponse;
+    /**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
+	private mdp2021.backend.shared.Code_response codeResponse;
 
     private mdp2021.backend.model.TrainStation trainstationInfo;
 

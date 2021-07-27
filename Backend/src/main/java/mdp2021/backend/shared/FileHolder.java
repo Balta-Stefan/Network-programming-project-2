@@ -5,8 +5,18 @@ import java.time.LocalDateTime;
 
 public class FileHolder implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
+
 	public class FileMetadata implements Serializable
 	{
+		/**
+		 * 
+		 */
+		private static final long serialVersionUID = 1L;
+
 		//public final int userID;
 		public final String username;
 		

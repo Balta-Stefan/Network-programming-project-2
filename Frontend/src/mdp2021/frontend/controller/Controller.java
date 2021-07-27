@@ -3,11 +3,11 @@ package mdp2021.frontend.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.time.LocalDateTime;
-import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -188,5 +188,23 @@ public class Controller
 		Response response = invocationBuilder.put(Entity.entity(report, MediaType.APPLICATION_JSON));
 		
 		return response.readEntity(String.class);
+	}
+
+	public Code_response uploadReport(File report)
+	{
+		try
+		{
+			byte[] fileData = Files.readAllBytes(report.toPath());
+			return rmiService.sendReport(cookie, report.getName(), fileData);
+		}
+		catch (RemoteException e)
+		{
+			log.warning(e.getMessage());
+			return new Code_response(0, "Error - cannot retrieve data from the server.");
+		} catch (IOException e)
+		{
+			log.severe(e.getMessage());
+			return new Code_response(0, "Error - cannot read the file.");
+		}
 	}
 }

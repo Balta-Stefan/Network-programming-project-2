@@ -24,7 +24,7 @@ public interface ITrainstationPersistence
 	public boolean addTrainStation(TrainStation station);
 	public boolean addUserToTrainstation(TrainStation station, User user);
 	//public boolean addTrainstationLines(LinesOfTrainstation lines); // unused
-	public boolean addLine(TrainLine line);
+	public TrainLine addLine(TrainLine line);
 	public boolean removeLine(TrainLine line);
 	public boolean removeStation(TrainStation station);
 }

@@ -4,6 +4,10 @@ import java.io.Serializable;
 
 public class TrainStation implements Serializable
 {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private int stationID;
 	//public final String stationName;
 	

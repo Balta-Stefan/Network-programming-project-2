@@ -100,7 +100,7 @@
                                           <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="125.0">
                                              <children>
                                                 <Button fx:id="addStationButton" mnemonicParsing="false" onAction="#addStation" text="Add station" />
-                                                <Button fx:id="removeStationButton" disable="true" mnemonicParsing="false" onAction="#removeStation" text="Remove station" />
+                                                <Button fx:id="removeStationButton" mnemonicParsing="false" onAction="#removeStation" text="Remove station" />
                                              </children>
                                           </HBox>
                                           <Label fx:id="trainstationInteractionStatusLabel" />

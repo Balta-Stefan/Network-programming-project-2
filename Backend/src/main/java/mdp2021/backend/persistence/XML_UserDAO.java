@@ -7,6 +7,8 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Optional;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -97,6 +99,31 @@ public class XML_UserDAO implements IUserDAO
 			return false;
 		
 		return file.delete();
+	}
+	
+	public List<User> getUsers()
+	{
+		File usersRoot = new File(pathPrefix);
+		
+		File[] userFiles = usersRoot.listFiles();
+		
+		List<User> users = new ArrayList<>();
+		
+		for(File f : userFiles)
+		{
+			try(FileInputStream fis = new FileInputStream(f);
+					XMLDecoder decoder = new XMLDecoder(fis))
+				{
+					User user = (User)(decoder.readObject());
+					users.add(user);
+				}
+				catch (Exception e)
+				{
+					log.info(e.getMessage());
+				}
+		}
+		
+		return users;
 	}
 	
 	/*public static void main(String[] args)

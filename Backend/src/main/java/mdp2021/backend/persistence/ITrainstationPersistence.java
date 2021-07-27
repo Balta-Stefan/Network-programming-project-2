@@ -17,6 +17,7 @@ public interface ITrainstationPersistence
 	public List<TrainstationUsers> getTrainstationUsers();
 	public Optional<LinesOfTrainstation> getTrainstationLines(TrainStation trainstation);
 	public Optional<StationArrival> getArrivalOfLine(TrainStation station, TrainLine line);
+	public Optional<List<TrainStation>> getTrainStations();
 	
 	// setters
 	public boolean reportTrainPass(TrainPassReport report);
@@ -25,4 +26,5 @@ public interface ITrainstationPersistence
 	//public boolean addTrainstationLines(LinesOfTrainstation lines); // unused
 	public boolean addLine(TrainLine line);
 	public boolean removeLine(TrainLine line);
+	public boolean removeStation(TrainStation station);
 }

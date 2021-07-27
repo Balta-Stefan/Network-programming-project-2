@@ -1,15 +1,19 @@
 package mdp2021.backend.GUI.controllers;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
 import mdp2021.backend.model.TrainLine;
 import mdp2021.backend.model.TrainStation;
@@ -35,36 +39,62 @@ public class TrainstationsController
 		}
 	}
 	
-	private static HashMap<TrainStation, TrainStation> trainStations = new HashMap<>();
+	private static final ITrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
+	//private static HashMap<TrainStation, TrainStation> trainStations = new HashMap<>();
 
 	
 	private static AtomicInteger availableLineID = new AtomicInteger(1);
 	
+	public static Optional<List<TrainStation>> getTrainStations()
+	{
+		return trainstationPersistence.getTrainStations();
+	}
 	
 	public static boolean addTrainstation(TrainStation station)
 	{
-		if(trainStations.containsKey(station))
+		return trainstationPersistence.addTrainStation(station);
+		/*if(trainStations.containsKey(station))
 			return false;
 
 		trainStations.put(station, station);
 		
-		return true;
+		return true;*/
+	}
+	
+	public static Optional<Set<TrainLine>> getTrainLines()
+	{
+		Optional<List<TrainStation>> trainStations = trainstationPersistence.getTrainStations();
+		if(trainStations.isEmpty())
+			return Optional.empty();
+		
+		Set<TrainLine> trainLines = new HashSet<>();
+		
+		for(TrainStation t : trainStations.get())
+		{
+			Optional<LinesOfTrainstation> tempLineData = trainstationPersistence.getTrainstationLines(t);
+			if(tempLineData.isEmpty())
+				continue;
+			
+			List<TrainLine> tempLines = tempLineData.get().linesThroughStation;
+			trainLines.addAll(tempLines);
+		}
+		
+		return Optional.of(trainLines);
 	}
 	
 	public static boolean removeTrainstation(TrainStation station)
 	{
-		if(trainStations.remove(station) == null)
+		return trainstationPersistence.removeStation(station);
+		/*if(trainStations.remove(station) == null)
 			return false;
 		
-		return true;
+		return true;*/
 	}
 	
 	public static Optional<TrainLine> addLinesToTrainstation(List<StationArrival> lines)
 	{
 		try
 		{
-			ITrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
-			
 			int lineID = availableLineID.getAndIncrement();
 			
 			StringBuilder builder = new StringBuilder();
@@ -85,41 +115,10 @@ public class TrainstationsController
 			log.info(e.getMessage());
 			return Optional.empty();
 		}
-	
-		/*try(Jedis jedis = pool.getResource())
-		{
-			StringBuilder builder = new StringBuilder();
-			
-			int i = 0;
-			for(; i < lines.size() - 1; i++)
-			{
-				StationArrival arrival = lines.get(i);
-				builder.append(arrival.trainStation.stationID + "-");
-				
-				jedis.hset("line:"+lineID, "station:"+arrival.trainStation.stationID, arrival.timeOfArrival.toString());
-				jedis.sadd("station-lines:"+arrival.trainStation.stationID, "line:"+lineID);
-			}
-			StationArrival arrival = lines.get(i);
-			builder.append(arrival.trainStation.stationID);
-			
-			jedis.hset("line:"+lineID, "station:"+arrival.trainStation.stationID, arrival.timeOfArrival.toString());
-			jedis.sadd("station-lines:"+arrival.trainStation.stationID, "line:"+lineID);
-			
-			jedis.hset("line:"+lineID, "representation", arrival.toString());
-		}
-		catch(Exception e)
-		{
-			return false;
-		}
-		
-		return true;*/
 	}
 
 	public static boolean removeTrainLine(TrainLine line)
 	{
-		ITrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
-		
 		return trainstationPersistence.removeLine(line);
-	
 	}
 }

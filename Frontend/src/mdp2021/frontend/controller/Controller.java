@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
+import java.time.LocalDateTime;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.FileHandler;
@@ -15,6 +16,7 @@ import java.util.logging.SimpleFormatter;
 
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
+import javax.ws.rs.client.Entity;
 import javax.ws.rs.client.Invocation;
 import javax.ws.rs.client.WebTarget;
 import javax.ws.rs.core.Cookie;
@@ -24,6 +26,8 @@ import javax.xml.rpc.ServiceException;
 
 import mdp2021.backend.GUI.GUI_JavaFX_Controller;
 import mdp2021.backend.model.LinesOfTrainstation;
+import mdp2021.backend.model.TrainLine;
+import mdp2021.backend.model.TrainPassReport;
 import mdp2021.backend.model.TrainStation;
 import mdp2021.backend.services.RMI.RMI_services_interface;
 import mdp2021.backend.services.SOAP.SOAP_service;
@@ -69,6 +73,7 @@ public class Controller
 	
 	private String cookie;
 	private TrainStation trainstationInfo;
+	private Cookie cookieObject;
 	
 	private void RMI_Init()
 	{
@@ -139,6 +144,8 @@ public class Controller
 		cookie = reply.getCookie();
     	trainstationInfo = reply.getTrainstationInfo();
     	
+    	cookieObject = new Cookie("cookie", cookie);
+    	
     	if(reply.getCodeResponse().getCode() == 200)
     		postLoginActions();
     	
@@ -162,11 +169,24 @@ public class Controller
 		
 		Invocation.Builder invocationBuilder = lineWebTarget.request(MediaType.APPLICATION_JSON);
 		
-		Cookie cookieObject = new Cookie("cookie", cookie);
 		invocationBuilder.cookie(cookieObject);
 		
 		Response response = invocationBuilder.get();
 		
 		return response.readEntity(LinesOfTrainstation.class);
+	}
+
+	public String reportTrainPass(LocalDateTime dateTime, TrainLine line)
+	{
+		TrainPassReport report = new TrainPassReport(trainstationInfo, line, dateTime);
+		
+		WebTarget lineWebTarget = webTarget.path("train-schedule");
+		
+		Invocation.Builder invocationBuilder = lineWebTarget.request(MediaType.APPLICATION_JSON);
+		invocationBuilder.cookie(cookieObject);
+		
+		Response response = invocationBuilder.put(Entity.entity(report, MediaType.APPLICATION_JSON));
+		
+		return response.readEntity(String.class);
 	}
 }

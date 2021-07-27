@@ -1,6 +1,7 @@
 package mdp2021.backend.persistence;
 
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
@@ -11,6 +12,9 @@ import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
+
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
@@ -41,7 +45,24 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 		}
 	}
 	
-	private static final List<TrainstationUsers> trainstationUsers = new ArrayList<>();
+	private static List<TrainstationUsers> trainstationUsers;
+	
+	static
+	{
+		// make a list of all trainstation users
+		Gson gson = new Gson();
+		String usersJSON = null;
+		try(Jedis jedis = REDIS_CustomPool.getConnection())
+		{
+			usersJSON = jedis.get("users_of_stations");
+		}
+		
+		Type listOfTestObject = new TypeToken<List<TrainstationUsers>>(){}.getType();
+		
+		trainstationUsers = gson.fromJson(usersJSON, listOfTestObject);
+		if(trainstationUsers == null)
+			trainstationUsers = new ArrayList<TrainstationUsers>();
+	}
 	
 	// getters
 	
@@ -139,6 +160,21 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 		}
 	}
 	
+	public Optional<List<TrainStation>> getTrainStations()
+	{
+		try(Jedis jedis = REDIS_CustomPool.getConnection())
+		{
+			Gson gson = new Gson();
+			
+			String stationsJSON = jedis.get("stations_info");
+			Type listOfTestObject = new TypeToken<List<TrainStation>>(){}.getType();
+			
+			List<TrainStation> trainStationsInfo = gson.fromJson(stationsJSON, listOfTestObject);
+			
+			return Optional.ofNullable(trainStationsInfo);
+		}
+	}
+	
 	// setters
 	
 	public boolean reportTrainPass(TrainPassReport report)
@@ -154,15 +190,36 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 	{
 		try(Jedis jedis = REDIS_CustomPool.getConnection())
 		{
-			long status = jedis.sadd("stations", Integer.toString(station.getID()));
-			if(status == 1)
-				return true;
+			/*long status = jedis.sadd("stations", Integer.toString(station.getID()));
+			if(status != 1)
+				return false;*/
+			
+			Gson gson = new Gson();
+			
+			String stationsJSON = jedis.get("stations_info");
+			Type listOfTestObject = new TypeToken<List<TrainStation>>(){}.getType();
+			
+			List<TrainStation> trainStationsInfo = gson.fromJson(stationsJSON, listOfTestObject);
+			if(trainStationsInfo == null)
+				trainStationsInfo = new ArrayList<TrainStation>();
+			
+			if(trainStationsInfo.contains(station))
+				return false;
+			
+			trainStationsInfo.add(station);
+			
+			String serializedList = gson.toJson(trainStationsInfo);
+			
+			jedis.set("stations_info", serializedList);
 		}
-		return false;
+		return true;
 	}
 	
 	public boolean addUserToTrainstation(TrainStation station, User user)
 	{
+		String JSON_list = null;
+		boolean status = false;
+		
 		synchronized(trainstationUsers)
 		{
 			for(TrainstationUsers t : trainstationUsers)
@@ -170,16 +227,25 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 				if(station.equals(t.trainStation) == false)
 					continue;
 				t.addUser(user);
-				return true;
+				status = true;
+				break;
 			}
 			
 			TrainstationUsers newStation = new TrainstationUsers(station);
 			newStation.addUser(user);
 			trainstationUsers.add(newStation);
+			
+			Gson gson = new Gson();
+			
+			JSON_list = gson.toJson(trainstationUsers);
 		}
 		
+		try(Jedis jedis = REDIS_CustomPool.getConnection())
+		{
+			jedis.set("users_of_stations", JSON_list);
+		}
 		
-		return true;
+		return status;
 	}
 
 	public boolean removeLine(TrainLine line)
@@ -260,6 +326,46 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 			jedis.hset("line:"+line.lineID, "station:"+arrival.trainStation.getID(), toAppend + arrival.timeOfArrival.toString());
 			jedis.sadd("station-lines:" + arrival.trainStation.getID(), "line:"+line.lineID);
 		}
+		return true;
+	}
+
+	public boolean removeStation(TrainStation station)
+	{
+		try(Jedis jedis = REDIS_CustomPool.getConnection())
+		{
+			Gson gson = new Gson();
+			
+			String stationsJSON = jedis.get("stations_info");
+			Type listOfTestObject = new TypeToken<List<TrainStation>>(){}.getType();
+			List<TrainStation> trainStationsInfo = gson.fromJson(stationsJSON, listOfTestObject);
+			
+			if(trainStationsInfo == null)
+				return false;
+			
+			trainStationsInfo.remove(station);
+			
+			String serializedJSON = gson.toJson(trainStationsInfo);
+			jedis.set("stations_info", serializedJSON);
+			
+			
+			// delete the data in all other places for consistency
+			Optional<LinesOfTrainstation> lines = getTrainstationLines(station);
+			if(lines.isEmpty())
+			{
+				jedis.del("station-lines:" + station.getID());
+				return true;
+			}
+			
+			LinesOfTrainstation linesData = lines.get();
+			
+			for(TrainLine l : linesData.linesThroughStation)
+			{
+				jedis.hdel("line:" + l.lineID, "station:" + station.getID());
+			}
+			
+			jedis.del("station-lines:" + station.getID());
+		}
+		
 		return true;
 	}
 }

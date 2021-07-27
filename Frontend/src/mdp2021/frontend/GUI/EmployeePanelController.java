@@ -1,6 +1,11 @@
 package mdp2021.frontend.GUI;
 
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.time.format.DateTimeParseException;
+
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -10,6 +15,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tab;
+import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
@@ -51,6 +57,18 @@ public class EmployeePanelController extends BaseFXController
     @FXML
     private Button refreshLineSchedulesTabButton;
     
+    @FXML
+    private Button refreshLinesList_recordTab;
+    
+    @FXML
+    private Label recordTrainPassStatusLabel;
+    
+    @FXML
+    private TextField recordTrainPass_timeInput;
+    
+    @FXML
+    private Button recordTrainPass_sendInfoButton;
+    
     public void initialize()
     {
     	//trainLinesListViewItems = trainLinesListView_lineSchedulesTab.getItems();
@@ -61,11 +79,68 @@ public class EmployeePanelController extends BaseFXController
     	lineStations_lineSchedulesTab.setItems(lineStations_lineSchedulesTabItems);
     }
 	
+    @FXML
+    void recordTrainPass(Event event)
+    {
+    	int selectedIndex = trainLinesList_recordTrainPassTab.getSelectionModel().getSelectedIndex();
+    	if(selectedIndex == -1)
+    	{
+    		recordTrainPassStatusLabel.setText("Select a line first.");
+    		return;
+    	}
+    	
+    	TrainLine selectedLine = trainLinesListViewItems.get(selectedIndex);
+    	
+    	String time = recordTrainPass_timeInput.getText();
+    	LocalDate date = LocalDate.now();
+    	
+    	LocalTime localTime = null;
+    	
+    	try
+    	{
+    		localTime  = LocalTime.parse(time);
+    	}
+    	catch(DateTimeParseException e)
+    	{
+    		recordTrainPassStatusLabel.setText("Time is of incorrect format!");
+    		recordTrainPassStatusLabel.setTextFill(Color.RED);
+    		return;
+    	}
+    	
+    	LocalDateTime dateTime = LocalDateTime.of(date, localTime);
+    	
+    	Task<String> tempTask = new Task<String>()
+    	{
+			@Override
+			protected String call() throws Exception
+			{
+				return frontendController.reportTrainPass(dateTime, selectedLine);
+			}
+		};
+    	
+    	tempTask.setOnRunning((runningEvent)->
+    	{
+    		recordTrainPass_sendInfoButton.setDisable(true);
+    	});
+    	
+    	tempTask.setOnSucceeded((successEvent)->
+    	{
+    		recordTrainPass_sendInfoButton.setDisable(false);
+    		
+    		String responseMessage = tempTask.getValue();
+    		recordTrainPassStatusLabel.setText(responseMessage);
+    	});
+    	
+    	executor.submit(tempTask);
+    }
 
     @FXML
     void refreshLineSchedulesTab(Event event)
     {
-    	getLineSchedules();
+    	if(recordTrainPassTab.isSelected())
+    		getLineSchedules(refreshLinesList_recordTab, recordTrainPassStatusLabel);
+    	else
+    		getLineSchedules(refreshLineSchedulesTabButton, getLinesStatusLabel);
     }
  
     @FXML
@@ -87,8 +162,11 @@ public class EmployeePanelController extends BaseFXController
     	}
     }
     
-    private void getLineSchedules()
+    private void getLineSchedules(Button activationButton, Label infoLabel)
     {
+    	// refreshLineSchedulesTabButton - original Button
+    	// getLinesStatusLabel - original label
+    	
     	Task<LinesOfTrainstation> tempTask = new Task<LinesOfTrainstation>() 
     	{
 			@Override
@@ -100,12 +178,12 @@ public class EmployeePanelController extends BaseFXController
     	
     	tempTask.setOnRunning((runningEvent)->
     	{
-    		refreshLineSchedulesTabButton.setDisable(true);
+    		activationButton.setDisable(true);
     	});
     	
     	tempTask.setOnSucceeded((successEvent)->
     	{
-    		refreshLineSchedulesTabButton.setDisable(false);
+    		activationButton.setDisable(false);
     		
     		LinesOfTrainstation lines = tempTask.getValue();
     		trainLinesListViewItems.clear();
@@ -117,10 +195,10 @@ public class EmployeePanelController extends BaseFXController
     	
     	tempTask.setOnFailed((failEvent)->
     	{
-    		refreshLineSchedulesTabButton.setDisable(false);
+    		activationButton.setDisable(false);
     		
-    		getLinesStatusLabel.setText("Error");
-    		getLinesStatusLabel.setTextFill(Color.RED);
+    		infoLabel.setText("Error");
+    		infoLabel.setTextFill(Color.RED);
     	});
     	
     	executor.submit(tempTask);

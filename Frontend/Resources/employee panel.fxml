@@ -21,7 +21,7 @@
                <children>
                   <VBox alignment="CENTER" prefHeight="739.0" prefWidth="1024.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
-                        <Button fx:id="refreshLineSchedulesTabButton" mnemonicParsing="false" onAction="#refreshLineSchedulesTab" text="Refresh">
+                        <Button fx:id="refreshLineSchedulesTabButton" mnemonicParsing="false" onAction="#refreshLineSchedulesTab" prefWidth="255.0" text="Refresh">
                            <VBox.margin>
                               <Insets top="25.0" />
                            </VBox.margin>
@@ -66,23 +66,28 @@
                <children>
                   <VBox layoutX="276.0" layoutY="177.0" prefHeight="739.0" prefWidth="1024.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
+                        <Button fx:id="refreshLinesList_recordTab" mnemonicParsing="false" onAction="#refreshLineSchedulesTab" prefWidth="108.0" text="Refresh list">
+                           <VBox.margin>
+                              <Insets top="25.0" />
+                           </VBox.margin>
+                        </Button>
                         <Label text="List of lines:">
                            <VBox.margin>
                               <Insets top="25.0" />
                            </VBox.margin>
                         </Label>
                         <ListView fx:id="trainLinesList_recordTrainPassTab" prefHeight="200.0" prefWidth="200.0" />
-                        <TextField promptText="Time of passing (HH:MM:SS)">
+                        <TextField fx:id="recordTrainPass_timeInput" promptText="Time of passing (HH:MM:SS)">
                            <VBox.margin>
                               <Insets top="25.0" />
                            </VBox.margin>
                         </TextField>
-                        <Button mnemonicParsing="false" text="Send information">
+                        <Button fx:id="recordTrainPass_sendInfoButton" mnemonicParsing="false" onAction="#recordTrainPass" text="Send information">
                            <VBox.margin>
                               <Insets top="25.0" />
                            </VBox.margin>
                         </Button>
-                        <Label text="Status:">
+                        <Label fx:id="recordTrainPassStatusLabel">
                            <VBox.margin>
                               <Insets top="15.0" />
                            </VBox.margin>

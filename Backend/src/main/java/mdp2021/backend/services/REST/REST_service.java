@@ -90,9 +90,9 @@ public class REST_service
 		boolean status = trainstationPersistence.reportTrainPass(report);
 		
 		if(status == false)
-			return Response.status(500).build();
+			return Response.status(500).entity("Error.").build();
 		
-		return Response.status(200).build();
+		return Response.status(200).entity("Success").build();
 		
 	}
 }

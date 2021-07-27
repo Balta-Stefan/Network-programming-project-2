@@ -1,6 +1,7 @@
 package mdp2021.backend.GUI.controllers;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -56,5 +57,10 @@ public class UsersController
 	public static boolean removeUser(User user)
 	{
 		return userPersistence.removeUser(user);
+	}
+
+	public static List<User> getUsers()
+	{
+		return userPersistence.getUsers();
 	}
 }

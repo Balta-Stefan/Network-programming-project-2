@@ -13,6 +13,7 @@ import java.time.format.DateTimeParseException;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
+import java.util.Set;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -200,15 +201,26 @@ public class GUI_JavaFX_Controller
 		usersListviewItems = usersListView.getItems();
     	usersListviewItems.add(addNewUserPlaceholder);
     	
+    	trainLinesListViewItems = trainLinesListView.getItems();
+    	
     	trainstationListviewItems = trainstationListview.getItems();
     	
     	lineStopsListviewItems = lineStopsListView.getItems();
     	
-    	trainLinesListViewItems = trainLinesListView.getItems();
-    	
     	reportsListViewItems = reportsListView.getItems();
     	
     	tabPane.setTabMinWidth(200);
+    	
+    	// get users
+    	usersListviewItems.addAll(UsersController.getUsers());
+    	
+    	Optional<List<TrainStation>> trainStations = TrainstationsController.getTrainStations();
+    	if(trainStations.isEmpty() == false)
+    		trainstationListviewItems.addAll(trainStations.get());
+    	
+    	Optional<Set<TrainLine>> trainLines = TrainstationsController.getTrainLines();
+    	if(trainLines.isPresent())
+    		trainLinesListViewItems.addAll(trainLines.get());
 	}
 	
 	// Users tab
@@ -350,7 +362,26 @@ public class GUI_JavaFX_Controller
     @FXML
     void removeStation(Event event) 
     {
-
+    	TrainStation selectedTrainstation = getSelectedTrainstation_linesTab();
+    	if(selectedTrainstation == null)
+    		return;
+    	
+    	boolean status = TrainstationsController.removeTrainstation(selectedTrainstation);
+    	
+    	if(status == true)
+    	{
+    		trainstationInteractionStatusLabel.setText("Station removed");
+    		trainstationInteractionStatusLabel.setTextFill(Color.GREEN);
+    		
+    		trainstationListviewItems.remove(selectedTrainstation);
+    		
+    		addTrainstationID_input.setText("");
+    	}
+    	else
+    	{
+    		trainstationInteractionStatusLabel.setText("Error");
+    		trainstationInteractionStatusLabel.setTextFill(Color.RED);
+    	}
     }
     
     @FXML

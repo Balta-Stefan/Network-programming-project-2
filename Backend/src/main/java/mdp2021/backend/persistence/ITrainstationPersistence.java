@@ -22,7 +22,7 @@ public interface ITrainstationPersistence
 	// setters
 	public boolean reportTrainPass(TrainPassReport report);
 	public boolean addTrainStation(TrainStation station);
-	public boolean addUserToTrainstation(TrainStation station, User user);
+	public boolean addUserToTrainstation(User user);
 	//public boolean addTrainstationLines(LinesOfTrainstation lines); // unused
 	public TrainLine addLine(TrainLine line);
 	public boolean removeLine(TrainLine line);

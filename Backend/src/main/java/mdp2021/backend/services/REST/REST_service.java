@@ -53,8 +53,8 @@ public class REST_service
 		Optional<LinesOfTrainstation> schedules = trainstationPersistence.getTrainstationLines(user.getTrainStation());
 		
 		if(schedules.isEmpty())
-			return Response.status(500).build();
-		
+			return Response.status(200).build();
+					
 		return Response.status(200).entity(schedules.get()).build();
 		
 	}

@@ -63,9 +63,9 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 				jedis.set("available_train_line_ID", "0");
 		}
 		
-		Type listOfTestObject = new TypeToken<List<TrainstationUsers>>(){}.getType();
+		Type trainstationUsersJSON = new TypeToken<List<TrainstationUsers>>(){}.getType();
 		
-		trainstationUsers = gson.fromJson(usersJSON, listOfTestObject);
+		trainstationUsers = gson.fromJson(usersJSON, trainstationUsersJSON);
 		if(trainstationUsers == null)
 			trainstationUsers = new ArrayList<TrainstationUsers>();
 	}
@@ -197,9 +197,9 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 	{
 		try(Jedis jedis = REDIS_CustomPool.getConnection())
 		{
-			/*long status = jedis.sadd("stations", Integer.toString(station.getID()));
+			long status = jedis.sadd("stations", Integer.toString(station.getID()));
 			if(status != 1)
-				return false;*/
+				return false;
 			
 			Gson gson = new Gson();
 			
@@ -222,8 +222,25 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 		return true;
 	}
 	
-	public boolean addUserToTrainstation(TrainStation station, User user)
+	private boolean checkExists(TrainStation station)
 	{
+		Set<String> stations = null;
+		
+		try(Jedis jedis = REDIS_CustomPool.getConnection())
+		{
+			stations = jedis.smembers("stations");
+		}
+		String stationID = Integer.toString(station.getID());
+		
+		return stations.contains(stationID);
+	}
+	
+	public boolean addUserToTrainstation(User user)
+	{
+		// check whether the station exists
+		if(checkExists(user.getTrainStation()) == false)
+			return false;
+		
 		String JSON_list = null;
 		boolean status = false;
 		
@@ -231,19 +248,20 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 		{
 			for(TrainstationUsers t : trainstationUsers)
 			{
-				if(station.equals(t.trainStation) == false)
+				if(user.getTrainStation().equals(t.trainStation) == false)
 					continue;
 				t.addUser(user);
 				status = true;
 				break;
 			}
 			
-			TrainstationUsers newStation = new TrainstationUsers(station);
-			newStation.addUser(user);
-			trainstationUsers.add(newStation);
-			
+			if(status == false)
+			{
+				TrainstationUsers newStation = new TrainstationUsers(user.getTrainStation());
+				newStation.addUser(user);
+				trainstationUsers.add(newStation);	
+			}
 			Gson gson = new Gson();
-			
 			JSON_list = gson.toJson(trainstationUsers);
 		}
 		
@@ -252,7 +270,7 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 			jedis.set("users_of_stations", JSON_list);
 		}
 		
-		return status;
+		return true;
 	}
 
 	public boolean removeLine(TrainLine line)

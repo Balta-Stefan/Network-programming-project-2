@@ -37,9 +37,7 @@ public class TrainstationsController
 	}
 	
 	private static final ITrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
-	//private static HashMap<TrainStation, TrainStation> trainStations = new HashMap<>();
 
-	//private static AtomicInteger availableLineID = new AtomicInteger(1);
 	
 	public static Optional<List<TrainStation>> getTrainStations()
 	{
@@ -49,12 +47,6 @@ public class TrainstationsController
 	public static boolean addTrainstation(TrainStation station)
 	{
 		return trainstationPersistence.addTrainStation(station);
-		/*if(trainStations.containsKey(station))
-			return false;
-
-		trainStations.put(station, station);
-		
-		return true;*/
 	}
 	
 	public static Optional<Set<TrainLine>> getTrainLines()
@@ -81,18 +73,12 @@ public class TrainstationsController
 	public static boolean removeTrainstation(TrainStation station)
 	{
 		return trainstationPersistence.removeStation(station);
-		/*if(trainStations.remove(station) == null)
-			return false;
-		
-		return true;*/
 	}
 	
 	public static Optional<TrainLine> addLinesToTrainstation(List<StationArrival> lines)
 	{
 		try
 		{
-			//int lineID = availableLineID.getAndIncrement();
-			
 			StringBuilder builder = new StringBuilder();
 			int i = 0;
 			for(; i < lines.size()-1; i++)

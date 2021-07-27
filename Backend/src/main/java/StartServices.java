@@ -150,10 +150,10 @@ public class StartServices
 		tp.addTrainStation(station2);
 		tp.addTrainStation(station3);
 		
-		tp.addUserToTrainstation(station1, user1);
-		tp.addUserToTrainstation(station1, user2);
-		tp.addUserToTrainstation(station2, user3);
-		tp.addUserToTrainstation(station3, user4);
+		tp.addUserToTrainstation(user1);
+		tp.addUserToTrainstation(user2);
+		tp.addUserToTrainstation(user3);
+		tp.addUserToTrainstation(user4);
 		
 	}
 			

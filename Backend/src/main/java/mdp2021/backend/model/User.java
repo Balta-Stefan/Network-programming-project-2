@@ -2,11 +2,8 @@ package mdp2021.backend.model;
 
 import java.io.Serializable;
 
-public class User implements Serializable
+public class User implements Serializable, Cloneable
 {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	//public final int ID;
 	private TrainStation trainStation;
@@ -24,6 +21,13 @@ public class User implements Serializable
 		this.username = username;
 		this.password = password;
 		this.salt = salt;
+	}
+	
+	@Override
+	public Object clone()
+	{
+		User clone = new User(trainStation, username, null, null);
+		return clone;
 	}
 	
 	public void setTrainStation(TrainStation trainStation)

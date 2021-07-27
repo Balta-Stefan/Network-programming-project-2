@@ -6,6 +6,8 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.List;
+import java.util.Optional;
 
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
@@ -14,6 +16,7 @@ import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.Node;
 import javafx.scene.control.Button;
+import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tab;
@@ -24,6 +27,9 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
 import mdp2021.backend.model.TrainLine;
+import mdp2021.backend.model.TrainStation;
+import mdp2021.backend.model.TrainstationUsers;
+import mdp2021.backend.model.User;
 import mdp2021.backend.shared.Code_response;
 
 public class EmployeePanelController extends BaseFXController
@@ -83,6 +89,12 @@ public class EmployeePanelController extends BaseFXController
     @FXML
     private Button recordTrainPass_sendInfoButton;
     
+    @FXML
+    private ComboBox<TrainstationUsers> chatTrainstationsComboBox;
+    
+    @FXML
+    private ComboBox<User> chatUsersComboBox;
+    
     public void initialize()
     {
     	//trainLinesListViewItems = trainLinesListView_lineSchedulesTab.getItems();
@@ -91,8 +103,23 @@ public class EmployeePanelController extends BaseFXController
     	trainLinesList_recordTrainPassTab.setItems(trainLinesListViewItems);
     	
     	lineStations_lineSchedulesTab.setItems(lineStations_lineSchedulesTabItems);
+    	
+    	Optional<List<TrainstationUsers>> trainstationUsers = frontendController.getTrainstationUsers();
+    	if(trainstationUsers.isPresent())
+    	{
+    		List<TrainstationUsers> usersData = trainstationUsers.get();
+    		for(TrainstationUsers c : usersData)
+    			System.out.println(c.trainStation.getID());
+    		chatTrainstationsComboBox.getItems().addAll(usersData);
+    	}
     }
 	
+    @FXML
+    void chat_stationSelect(Event event)
+    {
+    	System.out.println("I have selected trainstation combobox in chat");
+    }
+    
     @FXML
     void recordTrainPass(Event event)
     {
@@ -200,6 +227,10 @@ public class EmployeePanelController extends BaseFXController
     		activationButton.setDisable(false);
     		
     		LinesOfTrainstation lines = tempTask.getValue();
+    		
+    		if(lines == null)
+    			return;
+    		
     		trainLinesListViewItems.clear();
     		for(TrainLine line : lines.linesThroughStation)
 	    	{
@@ -241,14 +272,6 @@ public class EmployeePanelController extends BaseFXController
     	
     }
 
-    @FXML
-    void activateChatTab(Event event) 
-    {
-    	if(chatTab.isSelected() == false)
-    		return;
-    	
-    	
-    }
 
     @FXML
     void activateRecordTrainPassTab(Event event)

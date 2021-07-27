@@ -9,12 +9,7 @@ package mdp2021.backend.services.SOAP;
 
 public class SOAP_serviceServiceLocator extends org.apache.axis.client.Service implements mdp2021.backend.services.SOAP.SOAP_serviceService {
 
-    /**
-	 * 
-	 */
-	private static final long serialVersionUID = 1L;
-
-	public SOAP_serviceServiceLocator() {
+    public SOAP_serviceServiceLocator() {
     }
 
 

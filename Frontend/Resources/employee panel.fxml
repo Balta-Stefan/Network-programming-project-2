@@ -172,7 +172,7 @@
             </AnchorPane>
         </content>
       </Tab>
-      <Tab fx:id="chatTab" onSelectionChanged="#activateChatTab" text="Chat">
+      <Tab fx:id="chatTab" text="Chat">
         <content>
           <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                <children>
@@ -180,8 +180,8 @@
                      <children>
                         <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="25.0">
                            <children>
-                              <ComboBox prefWidth="150.0" promptText="Station" />
-                              <ComboBox prefWidth="150.0" promptText="User" />
+                              <ComboBox fx:id="chatTrainstationsComboBox" onAction="#chat_stationSelect" prefWidth="150.0" promptText="Station" />
+                              <ComboBox fx:id="chatUsersComboBox" prefWidth="150.0" promptText="User" />
                            </children>
                            <VBox.margin>
                               <Insets top="25.0" />

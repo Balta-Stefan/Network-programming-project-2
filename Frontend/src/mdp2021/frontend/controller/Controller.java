@@ -3,11 +3,15 @@ package mdp2021.frontend.controller;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.lang.reflect.Type;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.time.LocalDateTime;
+import java.util.Arrays;
+import java.util.List;
+import java.util.Optional;
 import java.util.Properties;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
@@ -24,11 +28,16 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.xml.rpc.ServiceException;
 
+import com.google.gson.Gson;
+import com.google.gson.JsonSyntaxException;
+import com.google.gson.reflect.TypeToken;
+
 import mdp2021.backend.GUI.GUI_JavaFX_Controller;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.TrainLine;
 import mdp2021.backend.model.TrainPassReport;
 import mdp2021.backend.model.TrainStation;
+import mdp2021.backend.model.TrainstationUsers;
 import mdp2021.backend.services.RMI.RMI_services_interface;
 import mdp2021.backend.services.SOAP.SOAP_service;
 import mdp2021.backend.services.SOAP.SOAP_serviceServiceLocator;
@@ -205,6 +214,35 @@ public class Controller
 		{
 			log.severe(e.getMessage());
 			return new Code_response(0, "Error - cannot read the file.");
+		}
+	}
+
+	public Optional<List<TrainstationUsers>> getTrainstationUsers()
+	{
+		try
+		{
+			Gson gson = new Gson();
+			
+			String users = soapService.getTrainstationUsers(cookie);
+			System.out.println(users);
+			Type listOfTestObject = new TypeToken<List<TrainstationUsers>>(){}.getType();
+			
+			List<TrainstationUsers> trainStationsInfo = gson.fromJson(users, listOfTestObject);
+			
+			for(TrainstationUsers t: trainStationsInfo)
+				System.out.println(t);
+			
+			return Optional.of(trainStationsInfo);
+		}
+		catch (RemoteException e)
+		{
+			log.severe(e.getMessage());
+			return Optional.empty();
+		}
+		catch(JsonSyntaxException je)
+		{
+			log.severe(je.getMessage());
+			return Optional.empty();
 		}
 	}
 }

@@ -9,6 +9,7 @@ import java.util.logging.SimpleFormatter;
 
 import mdp2021.backend.model.User;
 import mdp2021.backend.persistence.IUserDAO;
+import mdp2021.backend.persistence.REDIS_TrainstationPersistence;
 import mdp2021.backend.persistence.XML_UserDAO;
 import mdp2021.backend.utilities.BCrypt_hasher;
 import mdp2021.backend.utilities.PasswordHasher;
@@ -37,6 +38,13 @@ public class UsersController
 	
 	public static boolean register(User user)
 	{
+		REDIS_TrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
+		boolean status = trainstationPersistence.addUserToTrainstation((User)user.clone());
+		
+		
+		if(status == false)
+			return false;
+		
 		byte[] salt = hasher.getSalt();
 		user.setSalt(salt);
 		try

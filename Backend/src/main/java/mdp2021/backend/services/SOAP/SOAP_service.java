@@ -128,7 +128,7 @@ public final class SOAP_service
 		user = sessions.getUser(cookie);
 		
 		if(user.isEmpty())
-			return null;
+			return "";
 		
 		ITrainstationPersistence trainstationData = new REDIS_TrainstationPersistence();
 		

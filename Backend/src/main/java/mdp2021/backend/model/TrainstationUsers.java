@@ -1,12 +1,12 @@
 package mdp2021.backend.model;
 
-import java.util.HashSet;
-import java.util.Set;
+import java.util.ArrayList;
+import java.util.List;
 
 public class TrainstationUsers
 {
 	public final TrainStation trainStation;
-	public final Set<User> users = new HashSet<>();
+	public final List<User> users = new ArrayList<>();
 	
 	public TrainstationUsers(TrainStation trainStation)
 	{
@@ -15,7 +15,8 @@ public class TrainstationUsers
 	
 	public void addUser(User user)
 	{
-		users.add(user);
+		if(users.contains(user) == false)
+			users.add(user);
 	}
 
 	@Override
@@ -49,8 +50,6 @@ public class TrainstationUsers
 	@Override
 	public String toString()
 	{
-		return "TrainstationUsers [trainStation=" + trainStation + ", users=" + users + "]";
+		return trainStation.toString();
 	}
-	
-	
 }

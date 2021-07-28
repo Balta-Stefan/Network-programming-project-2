@@ -1,5 +1,12 @@
 package mdp2021.frontend.GUI;
 
+import java.io.IOException;
+import java.util.Optional;
+import java.util.logging.FileHandler;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
+
 import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.fxml.FXML;
@@ -12,6 +19,22 @@ import mdp2021.backend.shared.LoginReply;
 
 public class LoginScreenController extends BaseFXController
 {
+	private static final Logger log = Logger.getLogger(LoginScreenController.class.getName());
+	static
+	{
+		log.setLevel(Level.FINEST);
+		FileHandler txtHandler;
+		try
+		{
+			txtHandler = new FileHandler("Logs/LoginScreenController.txt", true);
+			SimpleFormatter txtFormatter = new SimpleFormatter();
+			txtHandler.setFormatter(txtFormatter);
+			log.addHandler(txtHandler);
+		} catch (SecurityException | IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
 	
 	@FXML
     private Label loginStatusLabel;
@@ -34,10 +57,10 @@ public class LoginScreenController extends BaseFXController
     	String password = passwordInput.getText();
     	
     	
-    	Task<LoginReply> tempTask = new Task<LoginReply>()
+    	Task<Optional<LoginReply>> tempTask = new Task<Optional<LoginReply>>()
 		{
 			@Override
-			protected LoginReply call() throws Exception
+			protected Optional<LoginReply> call() throws Exception
 			{
 				return frontendController.login(username, password);
 			}
@@ -58,19 +81,16 @@ public class LoginScreenController extends BaseFXController
 		tempTask.setOnSucceeded((successEvent)->
 		{
 			loginButton.setDisable(false);
-			LoginReply reply = tempTask.getValue();
-			//executor.submit(tempTask);
+			Optional<LoginReply> replyObj = tempTask.getValue();
 			
-			
-	    	//LoginReply reply = frontendController.login(username, password);
-			
-	    	
-	    	/*if(reply == null)
-	    	{
-	    		loginStatusLabel.setText("An error has occured.");
+			if(replyObj.isEmpty())
+			{
+				loginStatusLabel.setText("An error has occured");
 				loginStatusLabel.setTextFill(Color.RED);
 				return;
-	    	}*/
+			}
+			
+			LoginReply reply = replyObj.get();
 			
 	    	if(reply.getCodeResponse().getCode() != 200)
 	    	{
@@ -86,24 +106,33 @@ public class LoginScreenController extends BaseFXController
 	    	// show the new window
 	    	int trainstationID = frontendController.getTrainstationID();
 	    	
-	    	 //activateWindow(String FXML_path, String title, Event event)
+	    
 	    	activateWindow(employeePanelFXMLPath, "Station: " + trainstationID, event);
+	    	
 	    	/*try
 			{
-				Parent newRoot = FXMLLoader.load(Paths.get(employeePanelFXMLPath).toUri().toURL());
+				FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("Resources/employee panel.fxml"));     
+				Parent newRoot = fxmlLoader.load(); 
+				
+				EmployeePanelController employeePanelController = fxmlLoader.<EmployeePanelController>getController();
+				employeePanelController.setController(frontendController);
+				
 				Stage newStage = new Stage();
 				newStage.setTitle("Station: " + trainstationID);
 				newStage.setScene(new Scene(newRoot));
 				newStage.show();
 				
-				 ((Node)(event.getSource())).getScene().getWindow().hide();
-			} catch (IOException e)
+				((Node)(event.getSource())).getScene().getWindow().hide();
+			}
+	    	catch (IOException e)
 			{
 				log.warning(e.getMessage());
+				e.printStackTrace();
 			}*/
 		});
 		
 		
 		executor.submit(tempTask);
     }
+
 }

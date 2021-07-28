@@ -73,7 +73,17 @@ public class MessageProcessor extends Thread
 				
 				// message.sender = user.getUsername();
 				
-				receiverCS.send(message);
+				boolean messageStatus = receiverCS.send(message);
+				if(messageStatus == true)
+				{
+					Code_response response = new Code_response(200, "Message sent.");
+					senderCustomSocket.send(response);
+				}
+				else
+				{
+					Code_response response = new Code_response(400, "Message not sent.");
+					senderCustomSocket.send(response);
+				}
 			}
 		}
 	}
@@ -140,6 +150,8 @@ public class MessageProcessor extends Thread
 				return;
 			}
 			
+			message.sender = user.get().getUsername();
+			
 			if(received instanceof FileOrTextMessage)
 			{
 				handleFileOrTextMessage(user.get(), cs, (FileOrTextMessage)received);
@@ -149,7 +161,7 @@ public class MessageProcessor extends Thread
 				handleSubscriptionRequest(user.get(), cs, (SubscribeRequest)message);
 			}
 			
-			throw new Exception("Sent data is not of proper format.");
+			
 		}
 		catch(Exception e)
 		{

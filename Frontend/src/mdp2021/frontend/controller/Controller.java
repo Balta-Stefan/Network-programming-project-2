@@ -4,11 +4,13 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
+import java.net.UnknownHostException;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -17,6 +19,8 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import javax.net.ssl.SSLSocket;
+import javax.net.ssl.SSLSocketFactory;
 import javax.ws.rs.client.Client;
 import javax.ws.rs.client.ClientBuilder;
 import javax.ws.rs.client.Entity;
@@ -31,6 +35,7 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
+import mdp2021.backend.services.socket.CustomSocket;
 import mdp2021.backend.GUI.GUI_JavaFX_Controller;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.TrainLine;
@@ -41,7 +46,13 @@ import mdp2021.backend.services.RMI.RMI_services_interface;
 import mdp2021.backend.services.SOAP.SOAP_service;
 import mdp2021.backend.services.SOAP.SOAP_serviceServiceLocator;
 import mdp2021.backend.shared.Code_response;
+import mdp2021.backend.shared.FileHolder;
+import mdp2021.backend.shared.FileOrTextMessage;
 import mdp2021.backend.shared.LoginReply;
+import mdp2021.backend.shared.SubscribeRequest;
+import mdp2021.frontend.GUI.EmployeePanelController;
+import mdp2021.frontend.GUI.LoginScreenController;
+import mdp2021.frontend.utilities.MessageDaemon;
 
 public class Controller
 {
@@ -67,23 +78,32 @@ public class Controller
 	private static final String downloadFolder = "Application data\\Downloaded reports\\";
 	private static final String RMI_service_nameProperty = "RMI_service_name";
 	private static final String RMI_service_portProperty = "RMI_service_port";
+	private static final String socketServiceAddressProperty = "socketServiceAddress";
+	private static final String socketServicePortProperty = "socketServicePort";
+	private static final String TRUST_STORE_PATH = "./Resources/clientTruststore.p12";
+	private static final String TRUST_STORE_PASSWORD_property = "TRUST_STORE_PASSWORD";
 	
 	private static final String propertiesPath = "Resources\\application properties.properties";
-	private final String RMI_service_name;
-	private final int RMI_port;
+	private static final String RMI_service_name;
+	private static final int RMI_port;
+	private static final String socketServiceAddress;
+	private static final int socketServicePort;
+	private static final String KEY_STORE_PASSWORD;
 	
-	private RMI_services_interface rmiService;
-	private SOAP_service soapService;
+	private static RMI_services_interface rmiService;
+	private static SOAP_service soapService;
+	private static MessageDaemon messageDaemon;
 	
 	// REST related
 	private static final Client client = ClientBuilder.newClient();
 	private static final WebTarget webTarget = client.target(apiURL);
 	
-	private String cookie;
-	private TrainStation trainstationInfo;
-	private Cookie cookieObject;
+	private static String cookie;
+	private static TrainStation trainstationInfo;
+	private static Cookie cookieObject;
+	private static String username;
 	
-	private void RMI_Init()
+	private static void RMI_Init()
 	{
 		System.setProperty("java.security.policy", "Resources/client_policyfile.txt");
 		
@@ -101,7 +121,7 @@ public class Controller
 		}
 	}
 	
-	private void SOAP_init()
+	private static void SOAP_init()
 	{
 		SOAP_serviceServiceLocator locator = new SOAP_serviceServiceLocator();
 		
@@ -115,7 +135,9 @@ public class Controller
 		}
 	}
 	
-	public Controller()
+	private EmployeePanelController employeePanel;
+	
+	static
 	{
 		// load properties
 		Properties backendProperties = new Properties();
@@ -132,22 +154,85 @@ public class Controller
 		
 		RMI_service_name = backendProperties.getProperty(RMI_service_nameProperty);
 		RMI_port = Integer.parseInt(backendProperties.getProperty(RMI_service_portProperty));
-		
+		socketServiceAddress = backendProperties.getProperty(socketServiceAddressProperty);
+		socketServicePort = Integer.parseInt(backendProperties.getProperty(socketServicePortProperty));
+		KEY_STORE_PASSWORD = backendProperties.getProperty(TRUST_STORE_PASSWORD_property);
 		
 		// perform intialization for RMI
 		RMI_Init();
 		SOAP_init();
-	}
-	
-	private void postLoginActions()
-	{
-		// to do
 		
+		// secure socket init
+		System.setProperty("javax.net.ssl.trustStore", TRUST_STORE_PATH);
+		System.setProperty("javax.net.ssl.trustStorePassword", KEY_STORE_PASSWORD);
 	}
 	
-	public LoginReply login(String username, String password) throws RemoteException
+	public void setEmployeePanelController(EmployeePanelController employeePanel)
+	{
+		this.employeePanel = employeePanel;
+	}
+
+	
+	/*public Controller()
+	{
+		// load properties
+		Properties backendProperties = new Properties();
+		
+		try(FileInputStream fis = new FileInputStream(new File(propertiesPath)))
+		{
+			backendProperties.load(fis);
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			log.info(e.getMessage());
+		}
+		
+		RMI_service_name = backendProperties.getProperty(RMI_service_nameProperty);
+		RMI_port = Integer.parseInt(backendProperties.getProperty(RMI_service_portProperty));
+		socketServiceAddress = backendProperties.getProperty(socketServiceAddressProperty);
+		socketServicePort = Integer.parseInt(backendProperties.getProperty(socketServicePortProperty));
+		KEY_STORE_PASSWORD = backendProperties.getProperty(TRUST_STORE_PASSWORD_property);
+		
+		// perform intialization for RMI
+		RMI_Init();
+		SOAP_init();
+		
+		// secure socket init
+		System.setProperty("javax.net.ssl.trustStore", TRUST_STORE_PATH);
+		System.setProperty("javax.net.ssl.trustStorePassword", KEY_STORE_PASSWORD);
+	}*/
+	
+	private CustomSocket sendSecureMessage(Object message)
+	{
+		// create a socket
+		SSLSocketFactory sf = (SSLSocketFactory)SSLSocketFactory.getDefault();
+		SSLSocket secureSocket = null;
+		try
+		{
+			secureSocket = (SSLSocket)sf.createSocket(socketServiceAddress, socketServicePort);
+					
+			CustomSocket cs = new CustomSocket(secureSocket);
+			cs.send(message);
+			
+			return cs;
+		}
+		catch (UnknownHostException e)
+		{
+			log.severe(e.getMessage());
+			return null;
+		}
+		catch (IOException e)
+		{
+			log.severe(e.getMessage());
+			return null;
+		}
+	}
+	
+	public Optional<LoginReply> login(String username, String password) throws RemoteException
 	{
 		LoginReply reply = soapService.login(username, password);
+		Controller.username = username;
 		
 		cookie = reply.getCookie();
     	trainstationInfo = reply.getTrainstationInfo();
@@ -155,9 +240,26 @@ public class Controller
     	cookieObject = new Cookie("cookie", cookie);
     	
     	if(reply.getCodeResponse().getCode() == 200)
-    		postLoginActions();
+    	{
+    		// subscribe for chat notifications
+    		SubscribeRequest request = new SubscribeRequest(cookie, SubscribeRequest.Type.SUBSCRIBE);
+    		
+    		CustomSocket socket = sendSecureMessage(request);
+    		// check the response
+    		Optional<Object> responseObj = socket.receive();
+    		if(responseObj.isEmpty() || (responseObj.get() instanceof Code_response == false))
+    			return Optional.empty();
+    		
+    		Code_response loginInfo = (Code_response)responseObj.get();
+    		
+    		messageDaemon = new MessageDaemon(socket, employeePanel);
+    		messageDaemon.start();
+    		
+    		System.out.println("Subscription: " + loginInfo.getCode() + ", " + loginInfo.getMessage());
+    		return Optional.of(reply);
+    	}
     	
-    	return reply;
+    	return Optional.empty();
 	}
 
 	public Code_response logout() throws RemoteException
@@ -243,5 +345,38 @@ public class Controller
 			log.severe(je.getMessage());
 			return Optional.empty();
 		}
+	}
+
+	public Code_response sendMessage(String message, List<File> files, String receiver_username)
+	{
+		List<FileHolder> fileWrappers = new ArrayList<>();
+		
+		for(File f : files)
+		{
+			byte[] fileData;
+			try
+			{
+				fileData = Files.readAllBytes(f.toPath());
+				FileHolder tempHolder = new FileHolder(f.getName(), fileData, username, LocalDateTime.now());
+				fileWrappers.add(tempHolder);
+			} 
+			catch (IOException e)
+			{
+				log.warning(e.getMessage());
+				return new Code_response(0, "Couldn't read the file " + f.getName());
+			}
+		}
+		
+		FileOrTextMessage messageWrapper = new FileOrTextMessage(message, fileWrappers, cookie, receiver_username);
+		
+		CustomSocket socket = sendSecureMessage(messageWrapper);
+		
+		Optional<Object> responseObj = socket.receive();
+		if(responseObj.isEmpty())
+			return new Code_response(0, "Error.");
+		if(responseObj.get() instanceof Code_response == false)
+			return new Code_response(0, "Response cannot be parsed.");
+		
+		return (Code_response)responseObj.get();
 	}
 }

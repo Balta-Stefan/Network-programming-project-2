@@ -5,9 +5,6 @@ import java.util.List;
 
 public class FileOrTextMessage extends Message implements Serializable
 {
-	/**
-	 * 
-	 */
 	private static final long serialVersionUID = 1L;
 	public final String message;
 	public final List<FileHolder> files;
@@ -19,5 +16,11 @@ public class FileOrTextMessage extends Message implements Serializable
 		this.message = message;
 		this.files = files;
 		this.receiver_username = receiver_username;
+	}
+	
+	@Override
+	public String toString()
+	{
+		return "Message from: " + sender;
 	}
 }

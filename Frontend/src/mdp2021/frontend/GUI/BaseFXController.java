@@ -36,11 +36,12 @@ public class BaseFXController
 		}
 	}
 	
+	protected static Controller frontendController = new Controller();
+	
 	protected static final String loginPanelFXMLPath = "Resources/login screen.fxml";
 	protected static final String employeePanelFXMLPath = "Resources/employee panel.fxml";
 	
 	protected static final ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(1);
-	protected static final Controller frontendController = new Controller();
 	
 	protected void activateWindow(String FXML_path, String title, Event event)
 	{
@@ -56,6 +57,7 @@ public class BaseFXController
 		} catch (IOException e)
 		{
 			log.warning(e.getMessage());
+			e.printStackTrace();
 		}
 	}
 }

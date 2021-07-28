@@ -16,6 +16,7 @@ import redis.clients.jedis.Jedis;
 public class REDIS_UserSessions implements UserSessions
 {
 	private static final Logger log = Logger.getLogger(REDIS_UserSessions.class.getName());
+	
 	static
 	{
 		log.setLevel(Level.FINEST);
@@ -39,8 +40,8 @@ public class REDIS_UserSessions implements UserSessions
 		this.sessionDurationSeconds = sessionDurationSeconds;
 	}
 	
-	public String login(User user)
-	{
+	public Optional<String> login(User user)
+	{		
 		String stringCookie = CookieGenerator.generateCookie();
 		
 		// insert into Redis database
@@ -56,7 +57,7 @@ public class REDIS_UserSessions implements UserSessions
 			jedis.expire("user:" + stringCookie, sessionDurationSeconds);
 		}
 		
-		return stringCookie;
+		return Optional.of(stringCookie);
 	}
 	
 	public Optional<User> getUser(String userCookie)
@@ -96,5 +97,4 @@ public class REDIS_UserSessions implements UserSessions
 		}
 		return false;
 	}
-
 }

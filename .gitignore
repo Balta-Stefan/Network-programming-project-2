@@ -87,4 +87,8 @@ SOAP_serviceService/
 # Ignore logs
 Logs/
 
+#Ignore key stores, trus tstores and certificates
+*.p12
+*.crt
+
 # End of https://www.toptal.com/developers/gitignore/api/eclipse

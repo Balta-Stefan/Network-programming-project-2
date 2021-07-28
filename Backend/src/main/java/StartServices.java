@@ -29,6 +29,7 @@ import mdp2021.backend.persistence.XML_UserDAO;
 import mdp2021.backend.services.RMI.RMI_services;
 import mdp2021.backend.services.RMI.RMI_services_interface;
 import mdp2021.backend.services.socket.MessageProcessor;
+import mdp2021.backend.services.socket.Socket_service;
 import mdp2021.backend.utilities.BCrypt_hasher;
 import mdp2021.backend.utilities.PasswordHasher;
 import mdp2021.backend.utilities.REDIS_UserSessions;
@@ -60,16 +61,20 @@ public class StartServices
 	private static final String RMI_service_nameProperty = "RMI_service_name";
 	private static final String RMI_service_portProperty = "RMI_service_port";
 	private static final String JedisPool_URIProperty = "JedisPool_URI";
+	private static final String KEY_STORE_PATH = "./Resources/keystore.p12";
+	private static final String KEY_STORE_PASSWORDProperty = "KEY_STORE_PASSWORD";
+	private static final String socketServicePortProperty = "socketServicePort";
 	
 	
+	public static Socket_service socketService;
 	
 	//public static final String host = "127.0.0.1";
 	//public static final int port = 5201;
-	public static final String KEY_STORE_PATH = "";
-	public static final String KEY_STORE_PASSWORD = "";
+	public static String KEY_STORE_PASSWORD;
 	public static int sessionDurationSeconds;
 	public static String RMI_service_name;
 	public static int RMI_port;
+	public static int socketServicePort;
 	
 	public static final JedisPool pool;
 	
@@ -93,6 +98,8 @@ public class StartServices
 		sessionDurationSeconds = Integer.parseInt(backendProperties.getProperty(userSessionDurationProperty));
 		RMI_service_name = backendProperties.getProperty(RMI_service_nameProperty);
 		RMI_port = Integer.parseInt(backendProperties.getProperty(RMI_service_portProperty));
+		KEY_STORE_PASSWORD = backendProperties.getProperty(KEY_STORE_PASSWORDProperty);
+		socketServicePort = Integer.parseInt(backendProperties.getProperty(socketServicePortProperty));
 	}
 	
 	public static void addTestData()
@@ -220,10 +227,23 @@ public class StartServices
 		UserSessions session = new REDIS_UserSessions(sessionDurationSeconds);
 		User admin = new User(new TrainStation(-1), "admin", "", null);
 		
-		GUI_JavaFX_Controller.adminCookie = session.login(admin);
+		GUI_JavaFX_Controller.adminCookie = session.login(admin).get();
 		
 		MessageProcessor.initialize(sessionDurationSeconds);
 				
+		// start socket service
+		// Socket_service(int port, String KEY_STORE_PATH, String KEY_STORE_PASSWORD)
+		try
+		{
+			socketService = new Socket_service(socketServicePort, KEY_STORE_PATH, KEY_STORE_PASSWORD);
+			socketService.start();
+		}
+		catch(IOException e)
+		{
+			log.severe(e.getMessage());
+			System.out.println("Couldn't start socket service.");
+			return;
+		}
 
 		GUI_Starter.main(null);
 	}

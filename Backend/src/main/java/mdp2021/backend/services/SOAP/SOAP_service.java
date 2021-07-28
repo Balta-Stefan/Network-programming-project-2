@@ -95,14 +95,13 @@ public final class SOAP_service
 			return new LoginReply(new Code_response(500, "Error."), null, null);
 		}
 		
-		String cookie = null;
-		
 		
 		UserSessions sessions = new REDIS_UserSessions(sessionDurationSeconds);
-		cookie = sessions.login(userInfo);
+		Optional<String> cookieOpt = sessions.login(userInfo);
+		if(cookieOpt.isEmpty())
+			return new LoginReply(new Code_response(400, "You are already logged in."), null, null);
 		
-		
-		return new LoginReply(new Code_response(200, "Success"), userInfo.getTrainStation(), cookie);
+		return new LoginReply(new Code_response(200, "Success"), userInfo.getTrainStation(), cookieOpt.get());
 	}
 	
 	public Code_response logout(String cookie)

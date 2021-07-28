@@ -52,6 +52,7 @@ public class CustomSocket
 			InputStream is = socket.getInputStream();
 			int dataLength = 0;
 			byte[] dataLengthBytes = is.readNBytes(4);
+			System.out.println("Receiving from socket, isClosed: " + socket.isClosed());
 			dataLength |= (dataLengthBytes[0]);
 			dataLength |= (dataLengthBytes[1] << 8);
 			dataLength |= (dataLengthBytes[2] << 12);
@@ -79,6 +80,11 @@ public class CustomSocket
 			log.info(e.getMessage());
 			return Optional.empty();
 		}
+	}
+	
+	public boolean isClosed()
+	{
+		return socket.isClosed();
 	}
 	
 	public boolean send(Object object)
@@ -124,6 +130,4 @@ public class CustomSocket
 		
 		return true;
 	}
-
-
 }

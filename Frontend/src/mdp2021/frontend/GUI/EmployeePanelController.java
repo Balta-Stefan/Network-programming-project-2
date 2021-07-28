@@ -20,6 +20,7 @@ import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tab;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
@@ -30,33 +31,27 @@ import mdp2021.backend.model.TrainLine;
 import mdp2021.backend.model.TrainstationUsers;
 import mdp2021.backend.model.User;
 import mdp2021.backend.shared.Code_response;
+import mdp2021.backend.shared.FileOrTextMessage;
 
 
 public class EmployeePanelController extends BaseFXController
 {
+	public EmployeePanelController()
+	{
+		frontendController.setEmployeePanelController(this);
+	}
+	
 	private File chosenReport;
 
     @FXML
-    private Tab recordTrainPassTab;
+    private Tab lineSchedulesTab;
 
     @FXML
-    private Tab announcementsTab;
+    private Button refreshLineSchedulesTabButton;
 
     @FXML
-    private Tab chatTab;
-	
-    @FXML
-	private Tab lineSchedulesTab;
-    
-    @FXML
-	private Label getLinesStatusLabel;
-    
-    @FXML
-	private Label logoutSuccessLabel;
+    private Label getLinesStatusLabel;
 
-    @FXML
-    private Label selectedFileLabel;
-    
     @FXML
     private ListView<TrainLine> trainLinesListView_lineSchedulesTab;
     private ObservableList<TrainLine> trainLinesListViewItems = FXCollections.observableArrayList();
@@ -66,34 +61,64 @@ public class EmployeePanelController extends BaseFXController
     private ObservableList<String> lineStations_lineSchedulesTabItems =  FXCollections.observableArrayList();
     
     @FXML
-    private ListView<TrainLine> trainLinesList_recordTrainPassTab;
-    
-    @FXML
-    private Button refreshLineSchedulesTabButton;
-    
+    private Tab recordTrainPassTab;
+
     @FXML
     private Button refreshLinesList_recordTab;
-    
+
     @FXML
-    private Button sendReportButton;
-    
-    @FXML
-    private Label recordTrainPassStatusLabel;
-    
-    @FXML
-    private Label reportUploadStatusLabel;
-    
+    private ListView<TrainLine> trainLinesList_recordTrainPassTab;
+
     @FXML
     private TextField recordTrainPass_timeInput;
-    
+
     @FXML
     private Button recordTrainPass_sendInfoButton;
-    
+
+    @FXML
+    private Label recordTrainPassStatusLabel;
+
+    @FXML
+    private Tab announcementsTab;
+
+    @FXML
+    private Label selectedFileLabel;
+
+    @FXML
+    private Button sendReportButton;
+
+    @FXML
+    private Label reportUploadStatusLabel;
+
+    @FXML
+    private Tab chatTab;
+
     @FXML
     private ComboBox<TrainstationUsers> chatTrainstationsComboBox;
-    
+
     @FXML
     private ComboBox<User> chatUsersComboBox;
+
+    @FXML
+    private TextArea sentMessagesTextArea;
+
+    @FXML
+    private TextField chatMessageInput;
+
+    @FXML
+    private ListView<File> chatFilesListView;
+
+    @FXML
+    private Button sendMessageButton;
+
+    @FXML
+    private Label chatMessageStatusLabel;
+
+    @FXML
+    private ListView<FileOrTextMessage> messageNotifications;
+
+    @FXML
+    private Label logoutSuccessLabel;
     
     public void initialize()
     {
@@ -112,6 +137,105 @@ public class EmployeePanelController extends BaseFXController
     			System.out.println(c.trainStation.getID());
     		chatTrainstationsComboBox.getItems().addAll(usersData);
     	}
+    }
+    
+    @FXML
+    void removeChatFile(Event event)
+    {
+    	File selectedFile = chatFilesListView.getSelectionModel().getSelectedItem();
+    	if(selectedFile == null)
+    		return;
+    	
+    	chatFilesListView.getItems().remove(selectedFile);
+    }
+    
+    @FXML
+    void addChatFiles(Event event)
+    {
+    	FileChooser fileChooser = new FileChooser();
+    	
+    	fileChooser.getExtensionFilters().add(new ExtensionFilter("File type:" , "*"));
+    	File fileToSend = fileChooser.showOpenDialog(((Node)(event.getSource())).getScene().getWindow());
+    	
+    	chatFilesListView.getItems().add(fileToSend);
+    }
+    
+    public void receiveMessage(FileOrTextMessage message)
+    {
+    	messageNotifications.getItems().add(message);
+    }
+    
+    @FXML
+    void sendMessage(Event event)
+    {
+    	String message = chatMessageInput.getText();
+    	User receiver = chatUsersComboBox.getSelectionModel().getSelectedItem();
+    	
+    	List<File> files = chatFilesListView.getItems();
+    	
+    	if(receiver == null)
+    	{
+    		chatMessageStatusLabel.setText("Choose a receiver first.");
+    		chatMessageStatusLabel.setTextFill(Color.RED);
+    		return;
+    	}
+    	
+    	if(message.equals("") && files.isEmpty())
+    	{
+    		chatMessageStatusLabel.setText("There are no files or message to send.");
+    		chatMessageStatusLabel.setTextFill(Color.RED);
+    		return;
+    	}
+    	
+    	// sendMessage(String message, List<File> files, String receiver_username
+    	
+    	Task<Code_response> tempTask = new Task<Code_response>()
+    	{
+			@Override
+			protected Code_response call() throws Exception
+			{
+				return frontendController.sendMessage(message, files, receiver.getUsername());
+			}
+		};
+    	
+		tempTask.setOnRunning((runningEvent)->
+		{
+			sendMessageButton.setDisable(true);
+		});
+		
+		tempTask.setOnFailed((failedEvent)->
+		{
+			sendMessageButton.setDisable(false);
+			
+			chatMessageStatusLabel.setText("Error.");
+			chatMessageStatusLabel.setTextFill(Color.RED);
+		});
+		
+		tempTask.setOnSucceeded((successEvent)->
+		{
+			sendMessageButton.setDisable(false);
+			
+			Code_response response = tempTask.getValue();
+			
+			if(response.getCode() != 200)
+			{
+				chatMessageStatusLabel.setText(response.getMessage());
+				chatMessageStatusLabel.setTextFill(Color.RED);
+			}
+			else
+			{
+				chatMessageStatusLabel.setText(response.getMessage());
+				chatMessageStatusLabel.setTextFill(Color.GREEN);
+				
+				String messages = sentMessagesTextArea.getText();
+				if(messages.equals(""))
+					sentMessagesTextArea.setText(message);
+				else
+					sentMessagesTextArea.appendText("\n" + message);
+			}
+		});
+		
+		executor.submit(tempTask);
     }
 	
     @FXML

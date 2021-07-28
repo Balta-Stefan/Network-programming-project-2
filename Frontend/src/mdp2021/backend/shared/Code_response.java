@@ -8,6 +8,8 @@
 package mdp2021.backend.shared;
 
 public class Code_response  implements java.io.Serializable {
+	private static final long serialVersionUID = 1L;
+	
     private int code;
 
     private java.lang.String message;

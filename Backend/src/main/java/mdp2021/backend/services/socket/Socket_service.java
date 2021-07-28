@@ -36,7 +36,7 @@ public class Socket_service extends Thread
 	private ServerSocket serverSocket;
 	
 	
-	public Socket_service(String host, int port, String KEY_STORE_PATH, String KEY_STORE_PASSWORD) throws IOException
+	public Socket_service(int port, String KEY_STORE_PATH, String KEY_STORE_PASSWORD) throws IOException
 	{
 		System.setProperty("javax.net.ssl.keyStore", KEY_STORE_PATH);
 		System.setProperty("javax.net.ssl.keyStorePassword", KEY_STORE_PASSWORD);

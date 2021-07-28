@@ -191,15 +191,25 @@
                            <children>
                               <VBox prefHeight="640.0" prefWidth="500.0">
                                  <children>
-                                    <Label text="Me:" />
-                                    <TextArea disable="true" prefHeight="200.0" prefWidth="200.0" />
-                                    <TextField promptText="Enter your message" />
-                                    <Button mnemonicParsing="false" text="Add files">
+                                    <Label text="Me:">
+                                       <VBox.margin>
+                                          <Insets top="25.0" />
+                                       </VBox.margin></Label>
+                                    <TextArea fx:id="sentMessagesTextArea" disable="true" minHeight="-Infinity" prefHeight="200.0" prefWidth="200.0" />
+                                    <TextField fx:id="chatMessageInput" promptText="Enter your message" />
+                                    <Button mnemonicParsing="false" onAction="#addChatFiles" prefWidth="93.0" text="Add files">
                                        <VBox.margin>
                                           <Insets top="25.0" />
                                        </VBox.margin>
                                     </Button>
-                                    <Label text="Message status:">
+                                    <Button mnemonicParsing="false" onAction="#removeChatFile" prefWidth="93.0" text="Remove file" />
+                                    <ListView fx:id="chatFilesListView" prefHeight="200.0" prefWidth="200.0" />
+                                    <Button fx:id="sendMessageButton" mnemonicParsing="false" onAction="#sendMessage" text="Send message">
+                                       <VBox.margin>
+                                          <Insets top="25.0" />
+                                       </VBox.margin>
+                                    </Button>
+                                    <Label fx:id="chatMessageStatusLabel" text="Message status:">
                                        <VBox.margin>
                                           <Insets top="25.0" />
                                        </VBox.margin>
@@ -208,14 +218,20 @@
                               </VBox>
                               <VBox prefHeight="640.0" prefWidth="500.0">
                                  <children>
-                                    <Label text="Receiver:" />
-                                    <TextArea disable="true" prefHeight="200.0" prefWidth="200.0" />
+                                    <Label text="Receiver:">
+                                       <VBox.margin>
+                                          <Insets top="25.0" />
+                                       </VBox.margin></Label>
+                                    <TextArea disable="true" minHeight="-Infinity" prefHeight="200.0" prefWidth="200.0" />
                                  </children>
                               </VBox>
                            </children>
                         </HBox>
-                        <Label text="Notifications:" />
-                        <ListView prefHeight="200.0" prefWidth="200.0" />
+                        <Label text="Notifications:">
+                           <VBox.margin>
+                              <Insets top="25.0" />
+                           </VBox.margin></Label>
+                        <ListView fx:id="messageNotifications" prefHeight="200.0" prefWidth="200.0" />
                      </children>
                   </VBox>
                </children>

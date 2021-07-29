@@ -39,6 +39,7 @@
 <?import javafx.scene.control.ListView?>
 <?import javafx.scene.control.Tab?>
 <?import javafx.scene.control.TabPane?>
+<?import javafx.scene.control.TextArea?>
 <?import javafx.scene.control.TextField?>
 <?import javafx.scene.layout.AnchorPane?>
 <?import javafx.scene.layout.HBox?>
@@ -185,6 +186,52 @@
                      </children>
                   </AnchorPane>
               </content>
+            </Tab>
+            <Tab fx:id="announcementsTab" text="Announcements">
+               <content>
+                  <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+                     <children>
+                        <VBox layoutX="206.0" layoutY="87.0" prefHeight="739.0" prefWidth="1024.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
+                           <children>
+                              <HBox prefHeight="371.0" prefWidth="1024.0">
+                                 <children>
+                                    <VBox prefHeight="371.0" prefWidth="380.0">
+                                       <children>
+                                          <Label text="Announcements list:" />
+                                          <ListView fx:id="announcementsListView" onMouseClicked="#announcementSelect" prefHeight="357.0" prefWidth="86.0" />
+                                       </children>
+                                    </VBox>
+                                    <VBox prefHeight="371.0" prefWidth="639.0">
+                                       <children>
+                                          <Label text="Announcement:" />
+                                          <TextArea fx:id="announcementContent" disable="true" prefHeight="354.0" prefWidth="637.0" />
+                                       </children>
+                                    </VBox>
+                                 </children>
+                                 <VBox.margin>
+                                    <Insets top="25.0" />
+                                 </VBox.margin>
+                              </HBox>
+                              <TextArea fx:id="newAnnouncementTextArea" prefHeight="200.0" prefWidth="200.0">
+                                 <VBox.margin>
+                                    <Insets top="25.0" />
+                                 </VBox.margin>
+                              </TextArea>
+                              <Button fx:id="sendAnnouncementButton" mnemonicParsing="false" onAction="#sendAnnouncement" text="Send announcement">
+                                 <VBox.margin>
+                                    <Insets top="25.0" />
+                                 </VBox.margin>
+                              </Button>
+                              <Label fx:id="announcementStatusLabel" text="Status:">
+                                 <VBox.margin>
+                                    <Insets top="15.0" />
+                                 </VBox.margin>
+                              </Label>
+                           </children>
+                        </VBox>
+                     </children>
+                  </AnchorPane>
+               </content>
             </Tab>
         </tabs>
       </TabPane>

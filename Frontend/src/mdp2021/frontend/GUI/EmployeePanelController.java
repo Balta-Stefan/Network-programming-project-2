@@ -2,16 +2,18 @@ package mdp2021.frontend.GUI;
 
 
 import java.io.File;
+import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
-import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
+
+import com.google.gson.Gson;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -33,11 +35,12 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
 import mdp2021.backend.model.TrainLine;
+import mdp2021.backend.model.TrainStation;
 import mdp2021.backend.model.TrainstationUsers;
 import mdp2021.backend.model.User;
+import mdp2021.backend.shared.Announcement;
 import mdp2021.backend.shared.Code_response;
 import mdp2021.backend.shared.FileOrTextMessage;
-import mdp2021.backend.shared.Message;
 import mdp2021.frontend.utilities.ChatMessageHistory;
 
 
@@ -131,7 +134,22 @@ public class EmployeePanelController extends BaseFXController
     private Label logoutSuccessLabel;
     
     @FXML
+    private ListView<Announcement> announcementsListView;
+    
+    @FXML
+    private TextArea announcementContent;
+    
+    @FXML
+    private TextArea newAnnouncementTextArea;
+    
+    @FXML
+    private Button sendAnnouncementButton;
+    
+    @FXML
     private TextArea receiverTextArea;
+    
+    @FXML
+    private Label announcementStatusLabel;
     
     public void initialize()
     {
@@ -150,6 +168,81 @@ public class EmployeePanelController extends BaseFXController
     			System.out.println(c.trainStation.getID());
     		chatTrainstationsComboBox.getItems().addAll(usersData);
     	}
+    }
+    
+    @FXML
+    void sendAnnouncement(Event event)
+    {
+		String announcementMessage = newAnnouncementTextArea.getText();
+		if(announcementMessage.equals(""))
+			return;
+		
+		Task<Boolean> tempTask = new Task<Boolean>() 
+		{
+			@Override
+			protected Boolean call() throws Exception
+			{
+				return frontendController.sendMulticastData(announcementMessage);
+			}
+		};
+		
+		tempTask.setOnRunning((runningEvent)->
+		{
+			sendAnnouncementButton.setDisable(true);
+		});
+		
+		tempTask.setOnFailed((failedEvent)->
+		{
+			sendAnnouncementButton.setDisable(false);
+			announcementStatusLabel.setText("Announcement not sent");
+			announcementStatusLabel.setTextFill(Color.RED);
+		});
+		
+		tempTask.setOnSucceeded((successEvent)->
+		{
+			sendAnnouncementButton.setDisable(false);
+			
+			boolean success = tempTask.getValue();
+			
+			if(success == true)
+			{
+				announcementStatusLabel.setText("Announcement sent");
+				announcementStatusLabel.setTextFill(Color.GREEN);
+				newAnnouncementTextArea.clear();
+			}
+			else
+			{
+				announcementStatusLabel.setText("Announcement not sent");
+				announcementStatusLabel.setTextFill(Color.RED);
+			}
+		});
+		
+		executor.submit(tempTask);
+    }
+    
+    public void updateAnnouncementsList(List<Announcement> announcements)
+	{
+		Platform.runLater(new Runnable() 
+		{
+			@Override
+			public void run()
+			{
+				announcementsListView.getItems().addAll(announcements);
+			}
+		});
+	}
+    
+    @FXML
+    void announcementSelect(Event event)
+    {
+		Announcement announcement = announcementsListView.getSelectionModel().getSelectedItem();
+		if(announcement == null)
+			return;
+		
+		announcementContent.setText("Sender: " + announcement.sender.toString() + "\n");
+		announcementContent.appendText("Station: " + announcement.sender.getTrainStation().toString() + "\n");
+		announcementContent.appendText("\n\n");
+		announcementContent.appendText(announcement.message);
     }
     
     @FXML
@@ -504,15 +597,7 @@ public class EmployeePanelController extends BaseFXController
     	LinesOfTrainstation linesData = lines.get();*/
     }
 
-    
-    @FXML
-    void activateAnnouncementsTab(Event event)
-    {
-    	if(announcementsTab.isSelected() == false)
-    		return;
-    	
-    	
-    }
+   
 
 
     @FXML

@@ -97,9 +97,9 @@
                </children></AnchorPane>
       </content>
     </Tab>
-      <Tab fx:id="announcementsTab" onSelectionChanged="#activateAnnouncementsTab" text="Announcements">
-        <content>
-          <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
+      <Tab fx:id="announcementsTab" text="Announcements">
+         <content>
+            <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                <children>
                   <VBox layoutX="206.0" layoutY="87.0" prefHeight="739.0" prefWidth="1024.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                      <children>
@@ -108,13 +108,13 @@
                               <VBox prefHeight="371.0" prefWidth="380.0">
                                  <children>
                                     <Label text="Announcements list:" />
-                                    <ListView prefHeight="357.0" prefWidth="86.0" />
+                                    <ListView fx:id="announcementsListView" onMouseClicked="#announcementSelect" prefHeight="357.0" prefWidth="86.0" />
                                  </children>
                               </VBox>
                               <VBox prefHeight="371.0" prefWidth="639.0">
                                  <children>
                                     <Label text="Announcement:" />
-                                    <TextArea disable="true" prefHeight="354.0" prefWidth="637.0" />
+                                    <TextArea fx:id="announcementContent" disable="true" prefHeight="354.0" prefWidth="637.0" />
                                  </children>
                               </VBox>
                            </children>
@@ -122,17 +122,17 @@
                               <Insets top="25.0" />
                            </VBox.margin>
                         </HBox>
-                        <TextArea prefHeight="200.0" prefWidth="200.0">
+                        <TextArea fx:id="newAnnouncementTextArea" prefHeight="200.0" prefWidth="200.0">
                            <VBox.margin>
                               <Insets top="25.0" />
                            </VBox.margin>
                         </TextArea>
-                        <Button mnemonicParsing="false" text="Send announcement">
+                        <Button fx:id="sendAnnouncementButton" mnemonicParsing="false" onAction="#sendAnnouncement" text="Send announcement">
                            <VBox.margin>
                               <Insets top="25.0" />
                            </VBox.margin>
                         </Button>
-                        <Label text="Status:">
+                        <Label fx:id="announcementStatusLabel" text="Status:">
                            <VBox.margin>
                               <Insets top="15.0" />
                            </VBox.margin>
@@ -141,7 +141,7 @@
                   </VBox>
                </children>
             </AnchorPane>
-        </content>
+         </content>
       </Tab>
       <Tab text="Reports">
         <content>

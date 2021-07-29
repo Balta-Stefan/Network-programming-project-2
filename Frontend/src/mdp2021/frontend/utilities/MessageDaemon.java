@@ -8,11 +8,8 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import mdp2021.backend.services.socket.CustomSocket;
-import mdp2021.backend.shared.Code_response;
 import mdp2021.backend.shared.FileOrTextMessage;
-import mdp2021.backend.shared.SubscribeRequest;
 import mdp2021.frontend.GUI.EmployeePanelController;
-import mdp2021.frontend.GUI.LoginScreenController;
 
 public class MessageDaemon extends Thread
 {

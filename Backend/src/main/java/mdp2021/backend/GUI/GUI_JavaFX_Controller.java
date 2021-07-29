@@ -3,6 +3,7 @@ package mdp2021.backend.GUI;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
@@ -16,12 +17,18 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
 import java.util.Set;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ThreadPoolExecutor;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
+import com.google.gson.Gson;
+
+import javafx.application.Platform;
 import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
@@ -30,10 +37,9 @@ import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
+import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
-import mdp2021.backend.GUI.controllers.TrainstationsController;
-import mdp2021.backend.GUI.controllers.UsersController;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
 import mdp2021.backend.model.TrainLine;
@@ -46,6 +52,8 @@ import mdp2021.backend.persistence.IUserDAO;
 import mdp2021.backend.persistence.REDIS_TrainstationPersistence;
 import mdp2021.backend.persistence.XML_UserDAO;
 import mdp2021.backend.services.RMI.RMI_services_interface;
+import mdp2021.backend.services.socket.MulticastSocketService;
+import mdp2021.backend.shared.Announcement;
 import mdp2021.backend.shared.FileHolder;
 import mdp2021.backend.utilities.BCrypt_hasher;
 import mdp2021.backend.utilities.PasswordHasher;
@@ -54,6 +62,100 @@ import mdp2021.backend.utilities.PasswordHasher;
 
 public class GUI_JavaFX_Controller
 {
+	private static class MulticastServiceGUIUpdater extends Thread
+	{
+		private static final Logger log = Logger.getLogger(MulticastServiceGUIUpdater.class.getName());
+		static
+		{
+			log.setLevel(Level.FINEST);
+			FileHandler txtHandler;
+			try
+			{
+				txtHandler = new FileHandler("Logs/MulticastServiceGUIUpdater.txt", true);
+				SimpleFormatter txtFormatter = new SimpleFormatter();
+				txtHandler.setFormatter(txtFormatter);
+				log.addHandler(txtHandler);
+			} catch (SecurityException | IOException e)
+			{
+				e.printStackTrace();
+			}
+		}
+	
+		private static final int sleepPeriod = 2000;
+		
+		private final MulticastSocketService multicastService;
+		private final GUI_JavaFX_Controller interfaceToUpdate;
+	
+		private boolean run = true;
+		
+		public MulticastServiceGUIUpdater(MulticastSocketService multicastService, GUI_JavaFX_Controller interfaceToUpdate)
+		{
+			this.multicastService = multicastService;
+			this.interfaceToUpdate = interfaceToUpdate;
+			
+			multicastService.start();
+		}
+		
+		public void stopService()
+		{
+			run = false;
+			multicastService.stopService();
+		}
+		
+		@Override
+		public void run()
+		{
+			Gson gson = new Gson();
+			
+			while(run)
+			{
+				try
+				{
+					Thread.sleep(sleepPeriod);
+					if(run == false)
+						return;
+					
+					List<Byte[]> data = multicastService.getData();
+					if(data.isEmpty())
+						continue;
+					
+					List<Announcement> announcements = new ArrayList<>();
+					
+					for(Byte[] byteArray : data)
+					{
+						byte[] primitiveArray = new byte[byteArray.length];
+						for(int i = 0; i < byteArray.length; i++)
+							primitiveArray[i] = byteArray[i];
+						
+						String announcementJSON = new String(primitiveArray, StandardCharsets.UTF_8);
+						announcementJSON = announcementJSON.trim();
+						try
+						{
+							Announcement announcement = gson.fromJson(announcementJSON, Announcement.class);
+							announcements.add(announcement);
+						}
+						catch(Exception e)
+						{
+							log.warning(e.getMessage());
+						}
+					}
+					
+					interfaceToUpdate.updateAnnouncementsList(announcements);
+				} 
+				catch (InterruptedException e)
+				{
+					log.warning(e.getMessage());
+				}
+			}
+		}
+	}
+	
+	
+	private static final ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(1);
+	
+	public static MulticastSocketService multicastService;
+	private static MulticastServiceGUIUpdater multicastEventListener;
+	
 	private static final ITrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
 	private static final IUserDAO userPersistence = new XML_UserDAO(".\\Application data\\Users\\");
 	private static final PasswordHasher hasher = new BCrypt_hasher();
@@ -87,6 +189,9 @@ public class GUI_JavaFX_Controller
 	
 	public GUI_JavaFX_Controller()
 	{
+		multicastEventListener = new MulticastServiceGUIUpdater(multicastService, this);
+		multicastEventListener.start();
+		
 		Properties backendProperties = new Properties();
 		
 		try(FileInputStream fis = new FileInputStream(new File(propertiesPath)))
@@ -136,6 +241,101 @@ public class GUI_JavaFX_Controller
 	private ObservableList<StationArrival> lineStopsListviewItems;
 	private ObservableList<TrainLine> trainLinesListViewItems;
 	private ObservableList<FileHolder> reportsListViewItems;
+	
+	@FXML
+	private Button sendAnnouncementButton;
+	
+	@FXML
+	private TextArea announcementContent;
+	
+	@FXML
+	private TextArea newAnnouncementTextArea;
+	
+	@FXML
+	private ListView<Announcement> announcementsListView;
+	
+	@FXML
+	private Label announcementStatusLabel;
+	
+	public void updateAnnouncementsList(List<Announcement> announcements)
+	{
+		Platform.runLater(new Runnable() 
+		{
+			@Override
+			public void run()
+			{
+				announcementsListView.getItems().addAll(announcements);
+			}
+		});
+	}
+	
+	@FXML
+	void sendAnnouncement(Event event)
+	{
+		Gson gson = new Gson();
+		
+		String announcementMessage = newAnnouncementTextArea.getText();
+		if(announcementMessage.equals(""))
+			return;
+		
+		Announcement announcement = new Announcement(announcementMessage, new User(new TrainStation(0), "Administrator", null, null));
+		String announcementJSON = gson.toJson(announcement);
+		
+		Task<Boolean> tempTask = new Task<Boolean>() 
+		{
+			@Override
+			protected Boolean call() throws Exception
+			{
+				return multicastService.sendData(announcementJSON.getBytes(StandardCharsets.UTF_8));
+			}
+		};
+		
+		tempTask.setOnRunning((runningEvent)->
+		{
+			sendAnnouncementButton.setDisable(true);
+		});
+		
+		tempTask.setOnFailed((failedEvent)->
+		{
+			sendAnnouncementButton.setDisable(false);
+			announcementStatusLabel.setText("Announcement not sent");
+			announcementStatusLabel.setTextFill(Color.RED);
+		});
+		
+		tempTask.setOnSucceeded((successEvent)->
+		{
+			sendAnnouncementButton.setDisable(false);
+			
+			boolean success = tempTask.getValue();
+			
+			if(success == true)
+			{
+				announcementStatusLabel.setText("Announcement sent");
+				announcementStatusLabel.setTextFill(Color.GREEN);
+				newAnnouncementTextArea.clear();
+			}
+			else
+			{
+				announcementStatusLabel.setText("Announcement not sent");
+				announcementStatusLabel.setTextFill(Color.RED);
+			}
+		});
+		
+		executor.submit(tempTask);
+	}
+	
+	@FXML
+	void announcementSelect(Event event)
+	{
+		Announcement announcement = announcementsListView.getSelectionModel().getSelectedItem();
+		if(announcement == null)
+			return;
+		
+		announcementContent.setText("Sender: " + announcement.sender.toString() + "\n");
+		announcementContent.appendText("Station: " + announcement.sender.getTrainStation().toString() + "\n");
+		announcementContent.appendText("\n\n");
+		announcementContent.appendText(announcement.message);
+	}
 	
 	@FXML
     private TabPane tabPane;

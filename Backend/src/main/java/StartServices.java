@@ -269,6 +269,8 @@ public class StartServices
 			e.printStackTrace();
 			return;
 		}
+		
+		GUI_JavaFX_Controller.multicastService = multicastService;
 
 		GUI_Starter.main(null);
 	}

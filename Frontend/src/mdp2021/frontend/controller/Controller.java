@@ -5,6 +5,7 @@ import java.io.FileInputStream;
 import java.io.IOException;
 import java.lang.reflect.Type;
 import java.net.UnknownHostException;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.rmi.RemoteException;
 import java.rmi.registry.LocateRegistry;
@@ -36,26 +37,119 @@ import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
 import mdp2021.backend.services.socket.CustomSocket;
+import mdp2021.backend.services.socket.MulticastSocketService;
 import mdp2021.backend.GUI.GUI_JavaFX_Controller;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.TrainLine;
 import mdp2021.backend.model.TrainPassReport;
 import mdp2021.backend.model.TrainStation;
 import mdp2021.backend.model.TrainstationUsers;
+import mdp2021.backend.model.User;
 import mdp2021.backend.services.RMI.RMI_services_interface;
 import mdp2021.backend.services.SOAP.SOAP_service;
 import mdp2021.backend.services.SOAP.SOAP_serviceServiceLocator;
+import mdp2021.backend.shared.Announcement;
 import mdp2021.backend.shared.Code_response;
 import mdp2021.backend.shared.FileHolder;
 import mdp2021.backend.shared.FileOrTextMessage;
 import mdp2021.backend.shared.LoginReply;
 import mdp2021.backend.shared.SubscribeRequest;
 import mdp2021.frontend.GUI.EmployeePanelController;
-import mdp2021.frontend.GUI.LoginScreenController;
 import mdp2021.frontend.utilities.MessageDaemon;
 
 public class Controller
 {
+	private static class AnnouncementUpdaterDaemon extends Thread
+	{
+		private static final Logger log = Logger.getLogger(AnnouncementUpdaterDaemon.class.getName());
+		static
+		{
+			log.setLevel(Level.FINEST);
+			FileHandler txtHandler;
+			try
+			{
+				txtHandler = new FileHandler("Logs/AnnouncementUpdaterDaemon.txt", true);
+				SimpleFormatter txtFormatter = new SimpleFormatter();
+				txtHandler.setFormatter(txtFormatter);
+				log.addHandler(txtHandler);
+			} catch (SecurityException | IOException e)
+			{
+				e.printStackTrace();
+			}
+		}
+	
+		private static final int sleepPeriod = 2000;
+		
+		private final MulticastSocketService multicastService;
+		private final EmployeePanelController interfaceToUpdate;
+	
+		private boolean run = true;
+		
+		public AnnouncementUpdaterDaemon(MulticastSocketService multicastService, EmployeePanelController interfaceToUpdate)
+		{
+			this.multicastService = multicastService;
+			this.interfaceToUpdate = interfaceToUpdate;
+			
+			multicastService.start();
+		}
+		
+		public void stopService()
+		{
+			run = false;
+			multicastService.stopService();
+		}
+		
+		@Override
+		public void run()
+		{
+			Gson gson = new Gson();
+			
+			while(run)
+			{
+				try
+				{
+					Thread.sleep(sleepPeriod);
+					if(run == false)
+						return;
+					
+					List<Byte[]> data = multicastService.getData();
+					if(data.isEmpty())
+						continue;
+					
+					List<Announcement> announcements = new ArrayList<>();
+					
+					for(Byte[] byteArray : data)
+					{
+						byte[] primitiveArray = new byte[byteArray.length];
+						for(int i = 0; i < byteArray.length; i++)
+							primitiveArray[i] = byteArray[i];
+						
+						String announcementJSON = new String(primitiveArray, StandardCharsets.UTF_8);
+						announcementJSON = announcementJSON.trim();
+						try
+						{
+							Announcement announcement = gson.fromJson(announcementJSON, Announcement.class);
+							announcements.add(announcement);
+						}
+						catch(Exception e)
+						{
+							log.warning(e.getMessage());
+						}
+					}
+					
+					interfaceToUpdate.updateAnnouncementsList(announcements);
+				} 
+				catch (InterruptedException e)
+				{
+					log.warning(e.getMessage());
+				}
+			}
+		}
+	
+		
+	}
+	
+	
 	private static final String apiURL = "http://localhost:8080/MDP2021_backend/api/v1";
 	private static final Logger log = Logger.getLogger(GUI_JavaFX_Controller.class.getName());
 	static
@@ -82,6 +176,8 @@ public class Controller
 	private static final String socketServicePortProperty = "socketServicePort";
 	private static final String TRUST_STORE_PATH = "./Resources/clientTruststore.p12";
 	private static final String TRUST_STORE_PASSWORD_property = "TRUST_STORE_PASSWORD";
+	private static final String MULTICAST_GROUP_property = "MULTICAST_GROUP";
+	private static final String MULTICAST_PORT_property = "MULTICAST_PORT";
 	
 	private static final String propertiesPath = "Resources\\application properties.properties";
 	private static final String RMI_service_name;
@@ -89,10 +185,15 @@ public class Controller
 	private static final String socketServiceAddress;
 	private static final int socketServicePort;
 	private static final String KEY_STORE_PASSWORD;
+	public static String MULTICAST_GROUP;
+	public static int MULTICAST_PORT;
+	public static final int MULTICAST_MAX_BUFFER_SIZE = 2048;
 	
 	private static RMI_services_interface rmiService;
 	private static SOAP_service soapService;
 	private static MessageDaemon messageDaemon;
+	private static MulticastSocketService multicastService;
+	private AnnouncementUpdaterDaemon announcementsDaemon;
 	
 	// REST related
 	private static final Client client = ClientBuilder.newClient();
@@ -135,7 +236,30 @@ public class Controller
 		}
 	}
 	
+	
 	private EmployeePanelController employeePanel;
+	
+	public boolean sendMulticastData(String announcementMessage)
+	{
+		Announcement announcement = new Announcement(announcementMessage, new User(trainstationInfo, username, null, null));
+		Gson gson = new Gson();
+		
+		String announcementJSON = gson.toJson(announcement);
+		
+		return multicastService.sendData(announcementJSON.getBytes(StandardCharsets.UTF_8));
+	}
+	
+	public Controller()
+	{
+		try
+		{
+			multicastService = new MulticastSocketService(MULTICAST_PORT, MULTICAST_GROUP, MULTICAST_MAX_BUFFER_SIZE);
+		} 
+		catch (IOException e)
+		{
+			log.severe(e.getMessage());
+		}
+	}
 	
 	static
 	{
@@ -157,6 +281,8 @@ public class Controller
 		socketServiceAddress = backendProperties.getProperty(socketServiceAddressProperty);
 		socketServicePort = Integer.parseInt(backendProperties.getProperty(socketServicePortProperty));
 		KEY_STORE_PASSWORD = backendProperties.getProperty(TRUST_STORE_PASSWORD_property);
+		MULTICAST_GROUP = backendProperties.getProperty(MULTICAST_GROUP_property);
+		MULTICAST_PORT = Integer.parseInt(backendProperties.getProperty(MULTICAST_PORT_property));
 		
 		// perform intialization for RMI
 		RMI_Init();
@@ -167,11 +293,15 @@ public class Controller
 		System.setProperty("javax.net.ssl.trustStorePassword", KEY_STORE_PASSWORD);
 	}
 	
+	
 	public void setEmployeePanelController(EmployeePanelController employeePanel)
 	{
 		this.employeePanel = employeePanel;
 		messageDaemon.setPanel(employeePanel);
 		messageDaemon.start();
+		
+		announcementsDaemon = new AnnouncementUpdaterDaemon(multicastService, employeePanel);
+		announcementsDaemon.start();
 	}
 	
 
@@ -303,6 +433,8 @@ public class Controller
 		trainstationInfo = null;
 		cookieObject = null;
 		username = null;
+		
+		announcementsDaemon.stopService();
 		
 		return response;
 	}

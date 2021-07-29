@@ -43,6 +43,11 @@ public class CustomSocket
 		this.socket = socket;
 	}
 	
+	public void close() throws IOException
+	{
+		socket.close();
+	}
+	
 	public Optional<Object> receive()
 	{
 		byte[] objectStream = null;
@@ -52,7 +57,7 @@ public class CustomSocket
 			InputStream is = socket.getInputStream();
 			int dataLength = 0;
 			byte[] dataLengthBytes = is.readNBytes(4);
-			System.out.println("Receiving from socket, isClosed: " + socket.isClosed());
+			
 			dataLength |= (dataLengthBytes[0]);
 			dataLength |= (dataLengthBytes[1] << 8);
 			dataLength |= (dataLengthBytes[2] << 12);
@@ -84,7 +89,7 @@ public class CustomSocket
 	
 	public boolean isClosed()
 	{
-		return socket.isClosed();
+		return socket.isClosed() || socket.isOutputShutdown() || socket.isInputShutdown();
 	}
 	
 	public boolean send(Object object)

@@ -6,9 +6,14 @@ import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
+import javafx.application.Platform;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
 import javafx.concurrent.Task;
@@ -32,10 +37,14 @@ import mdp2021.backend.model.TrainstationUsers;
 import mdp2021.backend.model.User;
 import mdp2021.backend.shared.Code_response;
 import mdp2021.backend.shared.FileOrTextMessage;
+import mdp2021.backend.shared.Message;
+import mdp2021.frontend.utilities.ChatMessageHistory;
 
 
 public class EmployeePanelController extends BaseFXController
 {
+	private HashMap<ChatMessageHistory, ChatMessageHistory> chatHistory = new HashMap<>();
+	
 	public EmployeePanelController()
 	{
 		frontendController.setEmployeePanelController(this);
@@ -116,9 +125,13 @@ public class EmployeePanelController extends BaseFXController
 
     @FXML
     private ListView<FileOrTextMessage> messageNotifications;
-
+    private Set<FileOrTextMessage> nonDuplicateMessageNotifications = new HashSet<>();
+    
     @FXML
     private Label logoutSuccessLabel;
+    
+    @FXML
+    private TextArea receiverTextArea;
     
     public void initialize()
     {
@@ -160,9 +173,59 @@ public class EmployeePanelController extends BaseFXController
     	chatFilesListView.getItems().add(fileToSend);
     }
     
+    private void addMessageToHistory(TrainstationUsers tu, User user, String myMessage, String receiverMessage)
+    {
+    	ChatMessageHistory temp = new ChatMessageHistory(tu, user, myMessage, receiverMessage);
+		ChatMessageHistory obj = chatHistory.get(temp);
+		
+		if(obj == null)
+		{
+			chatHistory.put(temp, temp);
+		}
+		else
+		{
+			if(myMessage != null) // sending
+			{
+				obj.appendMyMessage(myMessage);
+			}
+			else // receiving
+			{
+				obj.appendReceiverMessage(receiverMessage);
+			}
+		}
+    }
+    
     public void receiveMessage(FileOrTextMessage message)
     {
-    	messageNotifications.getItems().add(message);
+    	Platform.runLater(new Runnable()
+    	{
+			@Override
+			public void run()
+			{
+				chatTab.setStyle("-fx-text-base-color: red;");
+				
+				nonDuplicateMessageNotifications.add(message);
+				messageNotifications.getItems().clear();
+				messageNotifications.getItems().addAll(nonDuplicateMessageNotifications);
+				
+				
+				for(TrainstationUsers tu : chatTrainstationsComboBox.getItems())
+		    	{
+		    		for(User user : tu.users)
+		    		{
+		    			if(user.getUsername().equals(message.sender))
+		    			{
+		    				chatTrainstationsComboBox.getSelectionModel().select(tu);
+		    				chatUsersComboBox.getSelectionModel().select(user);
+		    				
+		    				addMessageToHistory(tu, user, null, message.message);
+		    				
+		    				return;
+		    			}
+		    		}
+		    	}
+			}
+		});
     }
     
     @FXML
@@ -170,6 +233,8 @@ public class EmployeePanelController extends BaseFXController
     {
     	String message = chatMessageInput.getText();
     	User receiver = chatUsersComboBox.getSelectionModel().getSelectedItem();
+    	TrainstationUsers selectedStation = chatTrainstationsComboBox.getSelectionModel().getSelectedItem();
+    			
     	
     	List<File> files = chatFilesListView.getItems();
     	
@@ -224,14 +289,18 @@ public class EmployeePanelController extends BaseFXController
 			}
 			else
 			{
+				chatMessageInput.clear();
+				
 				chatMessageStatusLabel.setText(response.getMessage());
 				chatMessageStatusLabel.setTextFill(Color.GREEN);
 				
 				String messages = sentMessagesTextArea.getText();
-				if(messages.equals(""))
+				if(messages == null || messages.equals(""))
 					sentMessagesTextArea.setText(message);
 				else
 					sentMessagesTextArea.appendText("\n" + message);
+				
+				addMessageToHistory(selectedStation, receiver, message, null);
 			}
 		});
 		
@@ -239,11 +308,55 @@ public class EmployeePanelController extends BaseFXController
     }
 	
     @FXML
+    void selectChatNotification(Event event)
+    {
+    	FileOrTextMessage message = messageNotifications.getSelectionModel().getSelectedItem();
+    	if(message == null)
+    		return;
+    	
+    	chatTab.setStyle("-fx-text-base-color: black;");
+    	
+    	messageNotifications.getItems().remove(message);
+    	
+    	// iterate through chatTrainstationsComboBox and find the TrainstationUsers instance that contains the user with username from FileOrTextMessage.sender
+    	
+    	User sender = new User(null, message.sender, null ,null);
+    	
+    	for(TrainstationUsers tu : chatTrainstationsComboBox.getItems())
+    	{
+    		for(User user : tu.users)
+    		{
+    			if(user.getUsername().equals(sender.getUsername()))
+    			{
+    				chatTrainstationsComboBox.getSelectionModel().select(tu);
+    				chatUsersComboBox.getSelectionModel().select(user);
+    				
+    				ChatMessageHistory tmp = new ChatMessageHistory(tu, user, null, null);
+    				ChatMessageHistory history = chatHistory.get(tmp);
+    				
+    				if(history != null)
+    				{
+    					sentMessagesTextArea.setText(history.getMyMessageHistory());
+    					receiverTextArea.setText(history.getReceiverMessageHistory());
+    				}
+    			}
+    		}
+    	}
+    }
+    
+    @FXML
     void chat_stationSelect(Event event)
     {
     	TrainstationUsers selectedStation = chatTrainstationsComboBox.getSelectionModel().getSelectedItem();
     	if(selectedStation == null)
     		return;
+    	
+    	sentMessagesTextArea.clear();
+    	receiverTextArea.clear();
+    	
+    	chatFilesListView.getItems().clear();
+    	
+    	chatMessageInput.clear();
     	
     	chatUsersComboBox.getItems().clear();
     	chatUsersComboBox.getItems().addAll(selectedStation.users);

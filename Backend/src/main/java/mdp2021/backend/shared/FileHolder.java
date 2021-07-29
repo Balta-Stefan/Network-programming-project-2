@@ -2,6 +2,7 @@ package mdp2021.backend.shared;
 
 import java.io.Serializable;
 import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 
 public class FileHolder implements Serializable
 {
@@ -28,9 +29,10 @@ public class FileHolder implements Serializable
 		public FileMetadata(String fileName, LocalDateTime dateTime, String username, int fileSize)
 		{
 			//this.userID = userID;
+			DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+			this.dateTime = dateTime.format(formatter); 
 			this.username = username;
 			this.fileName = fileName;
-			this.dateTime = dateTime.toString();
 			this.fileSize = fileSize;
 		}
 

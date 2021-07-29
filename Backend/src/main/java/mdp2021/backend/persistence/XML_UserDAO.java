@@ -24,6 +24,7 @@ public class XML_UserDAO implements IUserDAO
 	private static final Logger log = Logger.getLogger(XML_UserDAO.class.getName());
 	static
 	{
+		System.out.println("XML_UserDAO static block");
 		log.setLevel(Level.FINEST);
 		FileHandler txtHandler;
 		try

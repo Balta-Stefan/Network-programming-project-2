@@ -22,6 +22,7 @@ import mdp2021.backend.utilities.BCrypt_hasher;
 import mdp2021.backend.utilities.REDIS_UserSessions;
 import mdp2021.backend.utilities.UserSessions;
 
+
 public final class SOAP_service
 {
 	//private static final String propertiesPath = ".\\Resources\\backend constants.properties";
@@ -70,8 +71,6 @@ public final class SOAP_service
 		System.out.println(durationProperty);
 		sessionDurationSeconds = Integer.parseInt(durationProperty);
 	}*/
-	
-
 	
 	public LoginReply login(String username, String password)
 	{

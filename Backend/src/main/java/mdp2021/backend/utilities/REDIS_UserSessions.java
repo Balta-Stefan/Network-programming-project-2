@@ -1,6 +1,7 @@
 package mdp2021.backend.utilities;
 
 import java.io.IOException;
+import java.net.Socket;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
@@ -42,6 +43,10 @@ public class REDIS_UserSessions implements UserSessions
 	
 	public Optional<String> login(User user)
 	{		
+		Optional<Socket> userSocket = SubscribersContainer.getReceiver(user.getUsername());
+		if(userSocket.isPresent())
+			return Optional.empty(); // only one session is allowed
+		
 		String stringCookie = CookieGenerator.generateCookie();
 		
 		// insert into Redis database
@@ -90,6 +95,9 @@ public class REDIS_UserSessions implements UserSessions
 	{
 		try(Jedis jedis = REDIS_CustomPool.getConnection())
 		{
+			String username = jedis.hget("user:" + userCookie, "username");
+			//SubscribersContainer.unsubscribe(username);
+			
 			long result = jedis.del("user:" + userCookie);
 			
 			if(result == 1)

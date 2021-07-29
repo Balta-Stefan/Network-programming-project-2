@@ -209,7 +209,7 @@
                                           <Insets top="25.0" />
                                        </VBox.margin>
                                     </Button>
-                                    <Label fx:id="chatMessageStatusLabel" text="Message status:">
+                                    <Label fx:id="chatMessageStatusLabel">
                                        <VBox.margin>
                                           <Insets top="25.0" />
                                        </VBox.margin>
@@ -222,7 +222,7 @@
                                        <VBox.margin>
                                           <Insets top="25.0" />
                                        </VBox.margin></Label>
-                                    <TextArea disable="true" minHeight="-Infinity" prefHeight="200.0" prefWidth="200.0" />
+                                    <TextArea fx:id="receiverTextArea" disable="true" minHeight="-Infinity" prefHeight="200.0" prefWidth="200.0" />
                                  </children>
                               </VBox>
                            </children>
@@ -231,7 +231,7 @@
                            <VBox.margin>
                               <Insets top="25.0" />
                            </VBox.margin></Label>
-                        <ListView fx:id="messageNotifications" prefHeight="200.0" prefWidth="200.0" />
+                        <ListView fx:id="messageNotifications" onMouseClicked="#selectChatNotification" prefHeight="200.0" prefWidth="200.0" />
                      </children>
                   </VBox>
                </children>

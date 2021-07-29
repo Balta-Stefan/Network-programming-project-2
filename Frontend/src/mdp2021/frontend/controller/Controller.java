@@ -170,7 +170,10 @@ public class Controller
 	public void setEmployeePanelController(EmployeePanelController employeePanel)
 	{
 		this.employeePanel = employeePanel;
+		messageDaemon.setPanel(employeePanel);
+		messageDaemon.start();
 	}
+	
 
 	
 	/*public Controller()
@@ -211,6 +214,7 @@ public class Controller
 		try
 		{
 			secureSocket = (SSLSocket)sf.createSocket(socketServiceAddress, socketServicePort);
+			secureSocket.setKeepAlive(true);
 					
 			CustomSocket cs = new CustomSocket(secureSocket);
 			cs.send(message);
@@ -252,8 +256,8 @@ public class Controller
     		
     		Code_response loginInfo = (Code_response)responseObj.get();
     		
-    		messageDaemon = new MessageDaemon(socket, employeePanel);
-    		messageDaemon.start();
+    		messageDaemon = new MessageDaemon(socket);
+    		//messageDaemon.start();
     		
     		System.out.println("Subscription: " + loginInfo.getCode() + ", " + loginInfo.getMessage());
     		return Optional.of(reply);
@@ -264,7 +268,42 @@ public class Controller
 
 	public Code_response logout() throws RemoteException
 	{
+		// unsubscribe from the push notification service
+		SubscribeRequest unsubscribeNotification = new SubscribeRequest(cookie, SubscribeRequest.Type.UNSUBSCRIBE);
+		CustomSocket socket = sendSecureMessage(unsubscribeNotification);
+		
+		Optional<Object> unsubscribeResponseObj = socket.receive();
+		if(unsubscribeResponseObj.isPresent() && unsubscribeResponseObj.get() instanceof Code_response)
+		{
+			Code_response unsubscribeRequest = (Code_response)unsubscribeResponseObj.get();
+			int a = 3;
+		}
+		
+		try
+		{
+			socket.close();
+		}
+		catch (IOException e1)
+		{
+			log.warning(e1.getMessage());
+		}
+		
+		try
+		{
+			messageDaemon.stopDaemon();
+		}
+		catch (IOException e)
+		{
+			log.warning(e.getMessage());
+		}
+		
 		Code_response response = soapService.logout(cookie);
+		
+		cookie = null;
+		trainstationInfo = null;
+		cookieObject = null;
+		username = null;
+		
 		return response;
 	}
 	

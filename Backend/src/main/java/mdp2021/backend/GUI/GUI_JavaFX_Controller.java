@@ -11,6 +11,7 @@ import java.time.LocalDateTime;
 import java.time.LocalTime;
 import java.time.format.DateTimeParseException;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Properties;
@@ -27,24 +28,36 @@ import javafx.scene.control.Button;
 import javafx.scene.control.DatePicker;
 import javafx.scene.control.Label;
 import javafx.scene.control.ListView;
+import javafx.scene.control.Tab;
 import javafx.scene.control.TabPane;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
 import mdp2021.backend.GUI.controllers.TrainstationsController;
 import mdp2021.backend.GUI.controllers.UsersController;
+import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
 import mdp2021.backend.model.TrainLine;
 import mdp2021.backend.model.TrainStation;
 import mdp2021.backend.model.User;
 import mdp2021.backend.persistence.Filesystem_ReportPersistence;
 import mdp2021.backend.persistence.IReportPersistence;
+import mdp2021.backend.persistence.ITrainstationPersistence;
+import mdp2021.backend.persistence.IUserDAO;
+import mdp2021.backend.persistence.REDIS_TrainstationPersistence;
+import mdp2021.backend.persistence.XML_UserDAO;
 import mdp2021.backend.services.RMI.RMI_services_interface;
 import mdp2021.backend.shared.FileHolder;
+import mdp2021.backend.utilities.BCrypt_hasher;
+import mdp2021.backend.utilities.PasswordHasher;
 
 // USE CLASS Event OVER ActionEvent!!!!
 
 public class GUI_JavaFX_Controller
 {
+	private static final ITrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
+	private static final IUserDAO userPersistence = new XML_UserDAO(".\\Application data\\Users\\");
+	private static final PasswordHasher hasher = new BCrypt_hasher();
+	
 	private static final Logger log = Logger.getLogger(GUI_JavaFX_Controller.class.getName());
 	static
 	{
@@ -196,6 +209,8 @@ public class GUI_JavaFX_Controller
     @FXML
     private DatePicker dateInput;
 
+    @FXML
+    private Tab reportsTab;
     
 	public void initialize()
 	{
@@ -213,15 +228,32 @@ public class GUI_JavaFX_Controller
     	tabPane.setTabMinWidth(200);
     	
     	// get users
-    	usersListviewItems.addAll(UsersController.getUsers());
+    	usersListviewItems.addAll(userPersistence.getUsers());
     	
-    	Optional<List<TrainStation>> trainStations = TrainstationsController.getTrainStations();
+    	Optional<List<TrainStation>> trainStations = trainstationPersistence.getTrainStations();
     	if(trainStations.isEmpty() == false)
     		trainstationListviewItems.addAll(trainStations.get());
     	
-    	Optional<Set<TrainLine>> trainLines = TrainstationsController.getTrainLines();
-    	if(trainLines.isPresent())
-    		trainLinesListViewItems.addAll(trainLines.get());
+    	Optional<Set<TrainLine>> trainLinesInfo = Optional.empty();//TrainstationsController.getTrainLines();
+    	
+    	// get train lines
+    	Optional<List<TrainStation>> trainStationsInfo = trainstationPersistence.getTrainStations();
+		if(trainStationsInfo.isEmpty() == false)
+		{
+			Set<TrainLine> trainLines = new HashSet<>();
+			
+			for(TrainStation t : trainStationsInfo.get())
+			{
+				Optional<LinesOfTrainstation> tempLineData = trainstationPersistence.getTrainstationLines(t);
+				if(tempLineData.isEmpty())
+					continue;
+				
+				List<TrainLine> tempLines = tempLineData.get().linesThroughStation;
+				trainLines.addAll(tempLines);
+			}
+			
+			trainLinesListViewItems.addAll(trainLines);
+		}
 	}
 	
 	// Users tab
@@ -239,7 +271,32 @@ public class GUI_JavaFX_Controller
     	
     	
     	User newUser = new User(new TrainStation(trainStationID), username, password, null);
-    	boolean registrationStatus = UsersController.register(newUser);
+    	//boolean registrationStatus = UsersController.register(newUser);
+    	
+    	// from controller
+    	REDIS_TrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
+		boolean registrationStatus = trainstationPersistence.addUserToTrainstation((User)newUser.clone());
+		
+		
+		if(registrationStatus == true)
+		{
+			byte[] salt = hasher.getSalt();
+			newUser.setSalt(salt);
+			try
+			{
+				String hash = hasher.hash(salt, newUser.getPassword());
+				newUser.setPassword(hash);
+				
+				registrationStatus = userPersistence.addUser(newUser);
+			}
+			catch (Exception e)
+			{
+				log.info(e.getMessage());
+				registrationStatus =  false;
+			}
+		}
+    	
+    	// end of controller
     	
     	if(registrationStatus == true)
     	{
@@ -265,7 +322,7 @@ public class GUI_JavaFX_Controller
     	if(selectedUser == null)
     		return;
     	
-    	boolean status = UsersController.removeUser(selectedUser);
+    	boolean status = userPersistence.removeUser(selectedUser);
     	
     	if(status == true)
     	{
@@ -342,7 +399,7 @@ public class GUI_JavaFX_Controller
     	}
     	
     	TrainStation selectedStation = new TrainStation(trainstationID);
-    	boolean status = TrainstationsController.addTrainstation(selectedStation);
+    	boolean status = trainstationPersistence.addTrainStation(selectedStation);
     	
     	if(status == true)
     	{
@@ -367,7 +424,7 @@ public class GUI_JavaFX_Controller
     	if(selectedTrainstation == null)
     		return;
     	
-    	boolean status = TrainstationsController.removeTrainstation(selectedTrainstation);
+    	boolean status = trainstationPersistence.removeStation(selectedTrainstation);
     	
     	if(status == true)
     	{
@@ -433,7 +490,26 @@ public class GUI_JavaFX_Controller
     @FXML
     void addLine(Event event)
     {
-    	Optional<TrainLine> newTrainLine = TrainstationsController.addLinesToTrainstation(new ArrayList<>(lineStopsListView.getItems()));
+    	Optional<TrainLine> newTrainLine = Optional.empty();
+    	List<StationArrival> lines = new ArrayList<>(lineStopsListView.getItems());
+    	
+    	try
+		{
+			StringBuilder builder = new StringBuilder();
+			int i = 0;
+			for(; i < lines.size()-1; i++)
+				builder.append(lines.get(i).trainStation.getID() + "-");
+			builder.append(lines.get(i).trainStation.getID());
+			
+			TrainLine line = new TrainLine(0, builder.toString(), lines);
+			TrainLine newLine = trainstationPersistence.addLine(line);
+			
+			newTrainLine = Optional.of(newLine);
+		}
+		catch(Exception e)
+		{
+			log.info(e.getMessage());
+		}
     	
     	if(newTrainLine.isEmpty() == false)
     	{
@@ -469,7 +545,7 @@ public class GUI_JavaFX_Controller
     		return;
     	
     	TrainLine lineToRemove = trainLinesListViewItems.get(selectedIndex);
-    	boolean status = TrainstationsController.removeTrainLine(lineToRemove);
+    	boolean status = trainstationPersistence.removeLine(lineToRemove);
     	
     	if(status == true)
     	{
@@ -513,6 +589,9 @@ public class GUI_JavaFX_Controller
     @FXML
     void getReportsList(Event event) 
     {
+    	if(reportsTab.isSelected() == false)
+    		return;
+    	
     	List<FileHolder> filesMetadata = null;
 		try
 		{
@@ -528,10 +607,8 @@ public class GUI_JavaFX_Controller
 
     	reportsStatusMessageLabel.setText("");
     	
-    	for(FileHolder f : filesMetadata)
-    	{
-    		reportsListViewItems.add(f);
-    	}
+    	reportsListViewItems.clear();
+    	reportsListViewItems.addAll(filesMetadata);
     }
     
     @FXML

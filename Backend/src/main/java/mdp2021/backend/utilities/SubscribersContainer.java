@@ -4,6 +4,7 @@ import java.io.IOException;
 import java.net.Socket;
 import java.util.HashMap;
 import java.util.Optional;
+import java.util.Set;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -18,6 +19,7 @@ public final class SubscribersContainer
 	private static final Logger log = Logger.getLogger(SubscribersContainer.class.getName());
 	static
 	{
+		System.out.println("SubscribersContainer static block");
 		log.setLevel(Level.FINEST);
 		FileHandler txtHandler;
 		try
@@ -32,20 +34,30 @@ public final class SubscribersContainer
 		}
 	}
 	
-	private static HashMap<String, Socket> users = new HashMap<>();
+	private static final HashMap<String, Socket> users = new HashMap<>();
 	
 	public static void subscribe(String username, Socket socket)
 	{
 		synchronized(users)
 		{
-			users.putIfAbsent(username, socket);
+			Set<String> keys = users.keySet();
+			Socket tmp = users.putIfAbsent(username, socket);
+			Socket temp2 = users.get(username);
+			keys = users.keySet();
+			int a = 3;
 		}
+		Set<String> keys = users.keySet();
+		int a = 3;
 	}
 	
 	public static void unsubscribe(String username)
 	{
+		Set<String> keys0 = users.keySet();
+		int a = 3;
 		synchronized(users)
 		{
+			Set<String> keys = users.keySet();
+			Socket tempCheck = users.get(username);
 			Socket socket = users.remove(username);
 			try
 			{

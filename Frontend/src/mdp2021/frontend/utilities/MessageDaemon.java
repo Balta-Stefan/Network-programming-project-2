@@ -10,6 +10,7 @@ import java.util.logging.SimpleFormatter;
 import mdp2021.backend.services.socket.CustomSocket;
 import mdp2021.backend.shared.Code_response;
 import mdp2021.backend.shared.FileOrTextMessage;
+import mdp2021.backend.shared.SubscribeRequest;
 import mdp2021.frontend.GUI.EmployeePanelController;
 import mdp2021.frontend.GUI.LoginScreenController;
 
@@ -35,10 +36,20 @@ public class MessageDaemon extends Thread
 		}
 	}
 	
-	public MessageDaemon(CustomSocket socket, EmployeePanelController employeePanel)
+	
+	public void stopDaemon() throws IOException
+	{
+		socket.close();
+	}
+	
+	public void setPanel(EmployeePanelController employeePanel)
+	{
+		this.employeePanel = employeePanel;
+	}
+	
+	public MessageDaemon(CustomSocket socket)
 	{
 		this.socket = socket;
-		this.employeePanel = employeePanel;
 	}
 	
 	@Override
@@ -49,6 +60,7 @@ public class MessageDaemon extends Thread
 			try
 			{
 				Optional<Object> object = socket.receive();
+
 				if(socket.isClosed())
 					return;
 				
@@ -61,6 +73,7 @@ public class MessageDaemon extends Thread
 			catch(Exception e)
 			{
 				log.warning(e.getMessage());
+				return;
 			}
 		}
 	}

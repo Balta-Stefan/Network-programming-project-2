@@ -81,7 +81,7 @@ public class GUI_JavaFX_Controller
 			}
 		}
 	
-		private static final int sleepPeriod = 2000;
+		private static final int sleepPeriod = 5000;
 		
 		private final MulticastSocketService multicastService;
 		private final GUI_JavaFX_Controller interfaceToUpdate;

@@ -78,7 +78,7 @@ public class Controller
 			}
 		}
 	
-		private static final int sleepPeriod = 2000;
+		private static final int sleepPeriod = 5000;
 		
 		private final MulticastSocketService multicastService;
 		private final EmployeePanelController interfaceToUpdate;
@@ -249,18 +249,6 @@ public class Controller
 		return multicastService.sendData(announcementJSON.getBytes(StandardCharsets.UTF_8));
 	}
 	
-	public Controller()
-	{
-		try
-		{
-			multicastService = new MulticastSocketService(MULTICAST_PORT, MULTICAST_GROUP, MULTICAST_MAX_BUFFER_SIZE);
-		} 
-		catch (IOException e)
-		{
-			log.severe(e.getMessage());
-		}
-	}
-	
 	static
 	{
 		// load properties
@@ -299,6 +287,15 @@ public class Controller
 		this.employeePanel = employeePanel;
 		messageDaemon.setPanel(employeePanel);
 		messageDaemon.start();
+		
+		try
+		{
+			multicastService = new MulticastSocketService(MULTICAST_PORT, MULTICAST_GROUP, MULTICAST_MAX_BUFFER_SIZE);
+		} 
+		catch (IOException e)
+		{
+			log.severe(e.getMessage());
+		}
 		
 		announcementsDaemon = new AnnouncementUpdaterDaemon(multicastService, employeePanel);
 		announcementsDaemon.start();

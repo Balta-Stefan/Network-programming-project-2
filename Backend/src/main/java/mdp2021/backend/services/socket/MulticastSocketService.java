@@ -43,6 +43,16 @@ public class MulticastSocketService extends Thread
 	public void stopService()
 	{
 		run = false;
+		try
+		{
+			mcSocket.leaveGroup(address);
+			mcSocket.close();
+		} 
+		catch (IOException e)
+		{
+			// TODO Auto-generated catch block
+			log.warning(e.getMessage());
+		}
 	}
 	
 	public List<Byte[]> getData()
@@ -106,6 +116,7 @@ public class MulticastSocketService extends Thread
 			catch(Exception e)
 			{
 				log.warning(e.getMessage());
+				
 				try
 				{
 					mcSocket.leaveGroup(address);

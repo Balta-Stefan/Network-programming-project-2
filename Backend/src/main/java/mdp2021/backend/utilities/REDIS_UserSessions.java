@@ -95,8 +95,8 @@ public class REDIS_UserSessions implements UserSessions
 	{
 		try(Jedis jedis = REDIS_CustomPool.getConnection())
 		{
-			String username = jedis.hget("user:" + userCookie, "username");
-			//SubscribersContainer.unsubscribe(username);
+			/*String username = jedis.hget("user:" + userCookie, "username");
+			SubscribersContainer.unsubscribe(username);*/
 			
 			long result = jedis.del("user:" + userCookie);
 			

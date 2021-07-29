@@ -10,7 +10,15 @@ import javafx.stage.Stage;
 
 public class GUI_Initializer extends Application
 {
-
+	
+	@Override
+	public void stop()
+	{
+		System.out.println("Frontend GUI shut down.");
+	}
+	
+	
+	
 	@Override
 	public void start(Stage primaryStage) throws Exception
 	{

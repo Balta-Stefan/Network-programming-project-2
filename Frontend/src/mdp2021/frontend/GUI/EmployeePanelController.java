@@ -2,7 +2,6 @@ package mdp2021.frontend.GUI;
 
 
 import java.io.File;
-import java.nio.charset.StandardCharsets;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -12,8 +11,6 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
-
-import com.google.gson.Gson;
 
 import javafx.application.Platform;
 import javafx.collections.FXCollections;
@@ -35,7 +32,6 @@ import javafx.stage.FileChooser.ExtensionFilter;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
 import mdp2021.backend.model.TrainLine;
-import mdp2021.backend.model.TrainStation;
 import mdp2021.backend.model.TrainstationUsers;
 import mdp2021.backend.model.User;
 import mdp2021.backend.shared.Announcement;

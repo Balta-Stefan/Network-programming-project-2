@@ -44,6 +44,20 @@ public class Socket_service extends Thread
 		SSLServerSocketFactory ssf = (SSLServerSocketFactory)SSLServerSocketFactory.getDefault();
 		serverSocket = ssf.createServerSocket(port);
 	}
+	
+	public void stopSocketService()
+	{
+		run = false;
+		
+		try
+		{
+			serverSocket.close();
+		} 
+		catch (IOException e)
+		{
+			log.warning(e.getMessage());
+		}
+	}
 
 	@Override
 	public void run()

@@ -1,6 +1,8 @@
+package mdp2021.backend;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.rmi.NoSuchObjectException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
@@ -14,7 +16,7 @@ import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
 import mdp2021.backend.GUI.GUI_JavaFX_Controller;
-import mdp2021.backend.GUI.GUI_Starter;
+import mdp2021.backend.GUI.Main;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.StationArrival;
 import mdp2021.backend.model.TrainLine;
@@ -88,6 +90,8 @@ public class StartServices
 	
 	public static final JedisPool pool;
 	
+	private static Registry registry;
+	
 	static
 	{
 		Properties backendProperties = new Properties();
@@ -116,98 +120,24 @@ public class StartServices
 		MULTICAST_MAX_BUFFER_SIZE = Integer.parseInt(backendProperties.getProperty(MULTICAST_MAX_BUFFER_SIZE_property));
 	}
 	
-	public static void addTestData()
+	
+	public static void stopServices()
 	{
-		IReportPersistence reportPersistence = new Filesystem_ReportPersistence("./Application data/Reports/");
-		IUserDAO userDatabase = new XML_UserDAO(".\\Application data\\Users\\");
-		PasswordHasher hasher = new BCrypt_hasher();
-		
-		// add train stations
-		TrainStation station1 = new TrainStation(1);
-		TrainStation station2 = new TrainStation(2);
-		TrainStation station3 = new TrainStation(3);
-		
-		// add users
-		User user1 = new User(station1, "Marko", "1234", hasher.getSalt());
-		User user2 = new User(station1, "Slavko", "1234", hasher.getSalt());
-		User user3 = new User(station2, "Safet", "1234", hasher.getSalt());
-		User user4 = new User(station3, "Pufet", "1234", hasher.getSalt());
+		socketService.stopSocketService();
 		
 		try
 		{
-			user1.setPassword(hasher.hash(user1.getSalt(), user1.getPassword()));
-			user2.setPassword(hasher.hash(user2.getSalt(), user2.getPassword()));
-			user3.setPassword(hasher.hash(user3.getSalt(), user3.getPassword()));
-			user4.setPassword(hasher.hash(user4.getSalt(), user4.getPassword()));
-		}
-		catch (Exception e)
+			UnicastRemoteObject.unexportObject(registry, true);
+		} 
+		catch (NoSuchObjectException e)
 		{
+			log.warning(e.getMessage());
 			e.printStackTrace();
-			return;
 		}
-		
-		System.out.println(userDatabase.addUser(user1));
-		System.out.println(userDatabase.addUser(user2));
-		System.out.println(userDatabase.addUser(user3));
-		System.out.println(userDatabase.addUser(user4));
-		
-	
-		
-		// add train station lines
-		StationArrival arrival1 = new StationArrival(station1, null, false);
-		StationArrival arrival2 = new StationArrival(station2, null, false);
-		StationArrival arrival3 = new StationArrival(station3, LocalDateTime.now(), false);
-		
-		List<StationArrival> stationArrivals = Arrays.asList(arrival1, arrival2, arrival3);
-		
-		TrainLine line1 = new TrainLine(1, "A-B-C-D", stationArrivals);
-		
-		LinesOfTrainstation lot = new LinesOfTrainstation(station1, Arrays.asList(line1));
-		
-
-	
-		ITrainstationPersistence tp = new REDIS_TrainstationPersistence();
-		tp.addTrainStation(station1);
-		tp.addTrainStation(station2);
-		tp.addTrainStation(station3);
-		
-		tp.addUserToTrainstation(user1);
-		tp.addUserToTrainstation(user2);
-		tp.addUserToTrainstation(user3);
-		tp.addUserToTrainstation(user4);
-		
 	}
-			
+	
 	public static void main(String[] args)
 	{
-		
-		
-		/*
-		// set up REST service
-		REST_service.trainstationPersistence = trainstationPersistence;
-		REST_service.userSessions = userSessions;
-
-		// set up RMI service - to do
-		RMI_services rmiService = new RMI_services(userSessions, reportPersistence);
-		
-		
-		// set up socket service - to do (multicast service left)
-		Socket_service socketService = null;
-		try
-		{
-			socketService = new Socket_service(host, port, KEY_STORE_PATH, KEY_STORE_PASSWORD);
-		}
-		catch (IOException e)
-		{
-			e.printStackTrace();
-			return;
-		}*/
-		
-
-		//addTestData();
-		
-	
-		
 		IReportPersistence reportPersistence = new Filesystem_ReportPersistence("./Application data/Reports/");
 		//reportPersistence.listReports();
 		
@@ -221,7 +151,7 @@ public class StartServices
 		{
 			RMI_services rmiService = new RMI_services(reportPersistence, sessionDurationSeconds);
 			RMI_services_interface stub = (RMI_services_interface)UnicastRemoteObject.exportObject(rmiService, RMI_port);
-			Registry registry = LocateRegistry.createRegistry(RMI_port);
+			registry = LocateRegistry.createRegistry(RMI_port);
 			registry.rebind(RMI_service_name, stub);
 			System.out.println("RMI started");
 		}
@@ -241,7 +171,7 @@ public class StartServices
 		UserSessions session = new REDIS_UserSessions(sessionDurationSeconds);
 		User admin = new User(new TrainStation(-1), "admin", "", null);
 		
-		GUI_JavaFX_Controller.adminCookie = session.login(admin).get();
+		String adminCookie = session.login(admin).get();
 		
 		MessageProcessor.initialize(sessionDurationSeconds);
 				
@@ -259,7 +189,7 @@ public class StartServices
 			return;
 		}
 		
-		try
+		/*try
 		{
 			multicastService = new MulticastSocketService(MULTICAST_PORT, MULTICAST_GROUP, MULTICAST_MAX_BUFFER_SIZE);
 		}
@@ -270,8 +200,9 @@ public class StartServices
 			return;
 		}
 		
-		GUI_JavaFX_Controller.multicastService = multicastService;
+		GUI_JavaFX_Controller.multicastService = multicastService;*/
 
-		GUI_Starter.main(null);
+		String[] applicationArguments = {adminCookie};
+		Main.main(applicationArguments);
 	}
 }

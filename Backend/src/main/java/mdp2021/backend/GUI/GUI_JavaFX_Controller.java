@@ -62,6 +62,61 @@ import mdp2021.backend.utilities.PasswordHasher;
 
 public class GUI_JavaFX_Controller
 {
+	private GUI_Initializer applicationObject;
+	
+	private static final Logger log = Logger.getLogger(GUI_JavaFX_Controller.class.getName());
+	static
+	{
+		log.setLevel(Level.FINEST);
+		FileHandler txtHandler;
+		try
+		{
+			txtHandler = new FileHandler("Logs/GUI_JavaFX_Controller.txt", true);
+			SimpleFormatter txtFormatter = new SimpleFormatter();
+			txtHandler.setFormatter(txtFormatter);
+			log.addHandler(txtHandler);
+		} catch (SecurityException | IOException e)
+		{
+			e.printStackTrace();
+		}
+	}
+	
+	
+	public void setApplicationObject(GUI_Initializer applicationObject)
+	{
+		this.applicationObject = applicationObject;
+		multicastEventListener = new MulticastServiceGUIUpdater(applicationObject.getMulticastService(), this);
+		multicastEventListener.start();
+		
+		// get users
+    	usersListviewItems.addAll(applicationObject.getUsers());
+    	
+    	Optional<List<TrainStation>> trainStations = applicationObject.getTrainStations();
+    	if(trainStations.isEmpty() == false)
+    		trainstationListviewItems.addAll(trainStations.get());
+    	
+    	//Optional<Set<TrainLine>> trainLinesInfo = Optional.empty();//TrainstationsController.getTrainLines();
+    	
+    	// get train lines
+    	//Optional<List<TrainStation>> trainStationsInfo = trainstationPersistence.getTrainStations();
+		if(trainStations.isEmpty() == false)
+		{
+			Set<TrainLine> trainLines = new HashSet<>();
+			
+			for(TrainStation t : trainStations.get())
+			{
+				Optional<LinesOfTrainstation> tempLineData = applicationObject.getTrainstationLines(t);
+				if(tempLineData.isEmpty())
+					continue;
+				
+				List<TrainLine> tempLines = tempLineData.get().linesThroughStation;
+				trainLines.addAll(tempLines);
+			}
+			
+			trainLinesListViewItems.addAll(trainLines);
+		}
+	}
+	
 	private static class MulticastServiceGUIUpdater extends Thread
 	{
 		private static final Logger log = Logger.getLogger(MulticastServiceGUIUpdater.class.getName());
@@ -153,88 +208,45 @@ public class GUI_JavaFX_Controller
 	
 	private static final ThreadPoolExecutor executor = (ThreadPoolExecutor)Executors.newFixedThreadPool(1);
 	
-	public static MulticastSocketService multicastService;
+	//public static MulticastSocketService multicastService;
 	private static MulticastServiceGUIUpdater multicastEventListener;
 	
-	private static final ITrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
-	private static final IUserDAO userPersistence = new XML_UserDAO(".\\Application data\\Users\\");
-	private static final PasswordHasher hasher = new BCrypt_hasher();
 	
-	private static final Logger log = Logger.getLogger(GUI_JavaFX_Controller.class.getName());
-	static
+	
+	public void shutdown()
 	{
-		log.setLevel(Level.FINEST);
-		FileHandler txtHandler;
-		try
-		{
-			txtHandler = new FileHandler("Logs/GUI_Controller.txt", true);
-			SimpleFormatter txtFormatter = new SimpleFormatter();
-			txtHandler.setFormatter(txtFormatter);
-			log.addHandler(txtHandler);
-		} catch (SecurityException | IOException e)
-		{
-			e.printStackTrace();
-		}
+		multicastEventListener.stopService();
 	}
-	
-	private static final String downloadFolder = "Application data\\Downloaded reports\\";
-	private static final String RMI_service_nameProperty = "RMI_service_name";
-	private static final String RMI_service_portProperty = "RMI_service_port";
-	
-	private static final String propertiesPath = "Resources\\backend constants.properties";
-	private final String RMI_service_name;
-	private final int RMI_port;
-	
-	private RMI_services_interface rmiService;
 	
 	public GUI_JavaFX_Controller()
 	{
-		multicastEventListener = new MulticastServiceGUIUpdater(multicastService, this);
-		multicastEventListener.start();
-		
-		Properties backendProperties = new Properties();
-		
-		try(FileInputStream fis = new FileInputStream(new File(propertiesPath)))
-		{
-			backendProperties.load(fis);
-		}
-		catch (Exception e)
-		{
-			// TODO Auto-generated catch block
-			log.info(e.getMessage());
-		}
-		
-		RMI_service_name = backendProperties.getProperty(RMI_service_nameProperty);
-		RMI_port = Integer.parseInt(backendProperties.getProperty(RMI_service_portProperty));
-		
-		
-		System.setProperty("java.security.policy", "./Resources/client_policyfile.txt");
-		
-		if(System.getSecurityManager() == null)
-			System.setSecurityManager(new SecurityManager());
-		try
-		{
-			Registry registry = LocateRegistry.getRegistry(RMI_port);
-			rmiService = (RMI_services_interface)registry.lookup(RMI_service_name);
-		}
-		catch(Exception e)
-		{
-			log.info(e.getMessage());
-			//e.printStackTrace();
-		}
+		System.out.println("controller ctor");
 	}
 	
+	public void initialize()
+	{
+		System.out.println("initialize method");
+		
 	
-	public static String adminCookie;
+		
+		usersListviewItems = usersListView.getItems();
+    	usersListviewItems.add(addNewUserPlaceholder);
+    	
+    	trainLinesListViewItems = trainLinesListView.getItems();
+    	
+    	trainstationListviewItems = trainstationListview.getItems();
+    	
+    	lineStopsListviewItems = lineStopsListView.getItems();
+    	
+    	reportsListViewItems = reportsListView.getItems();
+    	
+    	tabPane.setTabMinWidth(200);
+	}
+	
 
-	
     private User addNewUserPlaceholder = new User(null, "Add new user", null, null);
-   
-   
-	
-	
-	
 	private User selectedUser = null;
+	
 	
 	private ObservableList<User> usersListviewItems;
 	private ObservableList<TrainStation> trainstationListviewItems;
@@ -286,7 +298,8 @@ public class GUI_JavaFX_Controller
 			@Override
 			protected Boolean call() throws Exception
 			{
-				return multicastService.sendData(announcementJSON.getBytes(StandardCharsets.UTF_8));
+				return applicationObject.sendMulticastData(announcementJSON.getBytes(StandardCharsets.UTF_8));
+				//return multicastService.sendData(announcementJSON.getBytes(StandardCharsets.UTF_8));
 			}
 		};
 		
@@ -412,49 +425,6 @@ public class GUI_JavaFX_Controller
     @FXML
     private Tab reportsTab;
     
-	public void initialize()
-	{
-		usersListviewItems = usersListView.getItems();
-    	usersListviewItems.add(addNewUserPlaceholder);
-    	
-    	trainLinesListViewItems = trainLinesListView.getItems();
-    	
-    	trainstationListviewItems = trainstationListview.getItems();
-    	
-    	lineStopsListviewItems = lineStopsListView.getItems();
-    	
-    	reportsListViewItems = reportsListView.getItems();
-    	
-    	tabPane.setTabMinWidth(200);
-    	
-    	// get users
-    	usersListviewItems.addAll(userPersistence.getUsers());
-    	
-    	Optional<List<TrainStation>> trainStations = trainstationPersistence.getTrainStations();
-    	if(trainStations.isEmpty() == false)
-    		trainstationListviewItems.addAll(trainStations.get());
-    	
-    	Optional<Set<TrainLine>> trainLinesInfo = Optional.empty();//TrainstationsController.getTrainLines();
-    	
-    	// get train lines
-    	Optional<List<TrainStation>> trainStationsInfo = trainstationPersistence.getTrainStations();
-		if(trainStationsInfo.isEmpty() == false)
-		{
-			Set<TrainLine> trainLines = new HashSet<>();
-			
-			for(TrainStation t : trainStationsInfo.get())
-			{
-				Optional<LinesOfTrainstation> tempLineData = trainstationPersistence.getTrainstationLines(t);
-				if(tempLineData.isEmpty())
-					continue;
-				
-				List<TrainLine> tempLines = tempLineData.get().linesThroughStation;
-				trainLines.addAll(tempLines);
-			}
-			
-			trainLinesListViewItems.addAll(trainLines);
-		}
-	}
 	
 	// Users tab
     @FXML
@@ -477,7 +447,7 @@ public class GUI_JavaFX_Controller
     	REDIS_TrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
 		boolean registrationStatus = trainstationPersistence.addUserToTrainstation((User)newUser.clone());
 		
-		
+		PasswordHasher hasher = applicationObject.getHasher();
 		if(registrationStatus == true)
 		{
 			byte[] salt = hasher.getSalt();
@@ -487,7 +457,7 @@ public class GUI_JavaFX_Controller
 				String hash = hasher.hash(salt, newUser.getPassword());
 				newUser.setPassword(hash);
 				
-				registrationStatus = userPersistence.addUser(newUser);
+				registrationStatus = applicationObject.addUser(newUser);
 			}
 			catch (Exception e)
 			{
@@ -522,7 +492,7 @@ public class GUI_JavaFX_Controller
     	if(selectedUser == null)
     		return;
     	
-    	boolean status = userPersistence.removeUser(selectedUser);
+    	boolean status = applicationObject.removeUser(selectedUser);
     	
     	if(status == true)
     	{
@@ -599,7 +569,7 @@ public class GUI_JavaFX_Controller
     	}
     	
     	TrainStation selectedStation = new TrainStation(trainstationID);
-    	boolean status = trainstationPersistence.addTrainStation(selectedStation);
+    	boolean status = applicationObject.addTrainStation(selectedStation);
     	
     	if(status == true)
     	{
@@ -624,7 +594,7 @@ public class GUI_JavaFX_Controller
     	if(selectedTrainstation == null)
     		return;
     	
-    	boolean status = trainstationPersistence.removeStation(selectedTrainstation);
+    	boolean status = applicationObject.removeStation(selectedTrainstation);
     	
     	if(status == true)
     	{
@@ -702,7 +672,7 @@ public class GUI_JavaFX_Controller
 			builder.append(lines.get(i).trainStation.getID());
 			
 			TrainLine line = new TrainLine(0, builder.toString(), lines);
-			TrainLine newLine = trainstationPersistence.addLine(line);
+			TrainLine newLine = applicationObject.addLine(line);
 			
 			newTrainLine = Optional.of(newLine);
 		}
@@ -745,7 +715,7 @@ public class GUI_JavaFX_Controller
     		return;
     	
     	TrainLine lineToRemove = trainLinesListViewItems.get(selectedIndex);
-    	boolean status = trainstationPersistence.removeLine(lineToRemove);
+    	boolean status = applicationObject.removeLine(lineToRemove);
     	
     	if(status == true)
     	{
@@ -795,7 +765,7 @@ public class GUI_JavaFX_Controller
     	List<FileHolder> filesMetadata = null;
 		try
 		{
-			filesMetadata = rmiService.listReports(adminCookie);
+			filesMetadata = applicationObject.listReports();
 		} 
 		catch (RemoteException e)
 		{
@@ -823,7 +793,7 @@ public class GUI_JavaFX_Controller
     	
     	try
 		{
-			file = rmiService.getReport(adminCookie, selectedFile.metadata.fileName);
+			file = applicationObject.getReport(selectedFile.metadata.fileName);
 			if(file == null)
 				throw new Exception();
 		}
@@ -837,8 +807,7 @@ public class GUI_JavaFX_Controller
     	
     	reportsStatusMessageLabel.setText("");
     	
-    	IReportPersistence reportPersistence = new Filesystem_ReportPersistence(downloadFolder);
-    	reportPersistence.saveReport(file);
+    	applicationObject.saveReport(file);
     }
     
     @FXML
@@ -852,7 +821,7 @@ public class GUI_JavaFX_Controller
     	
     	try
 		{
-			rmiService.getReport(adminCookie, file.metadata.fileName);
+			applicationObject.getReport(file.metadata.fileName);
 		} 
     	catch (RemoteException e)
 		{

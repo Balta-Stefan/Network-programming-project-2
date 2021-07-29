@@ -169,7 +169,6 @@ public class Controller
 	}
 	
 	
-	private static final String downloadFolder = "Application data\\Downloaded reports\\";
 	private static final String RMI_service_nameProperty = "RMI_service_name";
 	private static final String RMI_service_portProperty = "RMI_service_port";
 	private static final String socketServiceAddressProperty = "socketServiceAddress";
@@ -237,7 +236,6 @@ public class Controller
 	}
 	
 	
-	private EmployeePanelController employeePanel;
 	
 	public boolean sendMulticastData(String announcementMessage)
 	{
@@ -284,7 +282,6 @@ public class Controller
 	
 	public void setEmployeePanelController(EmployeePanelController employeePanel)
 	{
-		this.employeePanel = employeePanel;
 		messageDaemon.setPanel(employeePanel);
 		messageDaemon.start();
 		
@@ -399,12 +396,7 @@ public class Controller
 		SubscribeRequest unsubscribeNotification = new SubscribeRequest(cookie, SubscribeRequest.Type.UNSUBSCRIBE);
 		CustomSocket socket = sendSecureMessage(unsubscribeNotification);
 		
-		Optional<Object> unsubscribeResponseObj = socket.receive();
-		if(unsubscribeResponseObj.isPresent() && unsubscribeResponseObj.get() instanceof Code_response)
-		{
-			Code_response unsubscribeRequest = (Code_response)unsubscribeResponseObj.get();
-			int a = 3;
-		}
+		//Optional<Object> unsubscribeResponseObj = socket.receive();
 		
 		try
 		{

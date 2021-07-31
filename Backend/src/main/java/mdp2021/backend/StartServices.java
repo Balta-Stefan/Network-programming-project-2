@@ -6,35 +6,22 @@ import java.rmi.NoSuchObjectException;
 import java.rmi.registry.LocateRegistry;
 import java.rmi.registry.Registry;
 import java.rmi.server.UnicastRemoteObject;
-import java.time.LocalDateTime;
-import java.util.Arrays;
-import java.util.List;
 import java.util.Properties;
 import java.util.logging.FileHandler;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.logging.SimpleFormatter;
 
-import mdp2021.backend.GUI.GUI_JavaFX_Controller;
 import mdp2021.backend.GUI.Main;
-import mdp2021.backend.model.LinesOfTrainstation;
-import mdp2021.backend.model.StationArrival;
-import mdp2021.backend.model.TrainLine;
 import mdp2021.backend.model.TrainStation;
 import mdp2021.backend.model.User;
 import mdp2021.backend.persistence.Filesystem_ReportPersistence;
 import mdp2021.backend.persistence.IReportPersistence;
-import mdp2021.backend.persistence.ITrainstationPersistence;
-import mdp2021.backend.persistence.IUserDAO;
-import mdp2021.backend.persistence.REDIS_TrainstationPersistence;
-import mdp2021.backend.persistence.XML_UserDAO;
 import mdp2021.backend.services.RMI.RMI_services;
 import mdp2021.backend.services.RMI.RMI_services_interface;
 import mdp2021.backend.services.socket.MessageProcessor;
 import mdp2021.backend.services.socket.MulticastSocketService;
 import mdp2021.backend.services.socket.Socket_service;
-import mdp2021.backend.utilities.BCrypt_hasher;
-import mdp2021.backend.utilities.PasswordHasher;
 import mdp2021.backend.utilities.REDIS_UserSessions;
 import mdp2021.backend.utilities.UserSessions;
 import redis.clients.jedis.JedisPool;
@@ -138,10 +125,6 @@ public class StartServices
 	
 	public static void main(String[] args)
 	{
-		IReportPersistence reportPersistence = new Filesystem_ReportPersistence("./Application data/Reports/");
-		//reportPersistence.listReports();
-		
-	
 		System.setProperty("java.security.policy", "./Resources/server_policyfile.txt");
 		
 		if(System.getSecurityManager() == null)
@@ -149,6 +132,7 @@ public class StartServices
 		
 		try
 		{
+			IReportPersistence reportPersistence = new Filesystem_ReportPersistence("./Application data/Reports/");
 			RMI_services rmiService = new RMI_services(reportPersistence, sessionDurationSeconds);
 			RMI_services_interface stub = (RMI_services_interface)UnicastRemoteObject.exportObject(rmiService, RMI_port);
 			registry = LocateRegistry.createRegistry(RMI_port);
@@ -159,15 +143,8 @@ public class StartServices
 		{
 			e.printStackTrace();
 		}
-		System.out.println("RMI started 2");
-		
-		// start the socket service - to do
-		
-
 		
 		// create administrator session and pass the cookie to the GUI
-		
-	
 		UserSessions session = new REDIS_UserSessions(sessionDurationSeconds);
 		User admin = new User(new TrainStation(-1), "admin", "", null);
 		
@@ -176,11 +153,11 @@ public class StartServices
 		MessageProcessor.initialize(sessionDurationSeconds);
 				
 		// start socket service
-		// Socket_service(int port, String KEY_STORE_PATH, String KEY_STORE_PASSWORD)
 		try
 		{
 			socketService = new Socket_service(socketServicePort, KEY_STORE_PATH, KEY_STORE_PASSWORD);
 			socketService.start();
+			System.out.println("Socket service started.");
 		}
 		catch(IOException e)
 		{
@@ -188,19 +165,7 @@ public class StartServices
 			System.out.println("Couldn't start socket service.");
 			return;
 		}
-		
-		/*try
-		{
-			multicastService = new MulticastSocketService(MULTICAST_PORT, MULTICAST_GROUP, MULTICAST_MAX_BUFFER_SIZE);
-		}
-		catch (IOException e)
-		{
-			log.severe(e.getMessage());
-			e.printStackTrace();
-			return;
-		}
-		
-		GUI_JavaFX_Controller.multicastService = multicastService;*/
+	
 
 		String[] applicationArguments = {adminCookie};
 		Main.main(applicationArguments);

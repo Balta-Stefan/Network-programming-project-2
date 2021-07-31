@@ -1,7 +1,11 @@
 package mdp2021.frontend.utilities;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import mdp2021.backend.model.TrainstationUsers;
 import mdp2021.backend.model.User;
+import mdp2021.backend.shared.FileHolder;
 
 public class ChatMessageHistory
 {
@@ -9,8 +13,14 @@ public class ChatMessageHistory
 	private User user;
 	private String myMessageHistory;
 	private String receiverMessageHistory;
+	private List<FileHolder> receivedFiles = new ArrayList<>();
 	
 	
+	public List<FileHolder> getReceivedFiles()
+	{
+		return receivedFiles;
+	}
+
 	public ChatMessageHistory(TrainstationUsers station, User user, String myMessageHistory, String receiverMessageHistory)
 	{
 		this.station = station;
@@ -22,6 +32,15 @@ public class ChatMessageHistory
 	public String getMyMessageHistory()
 	{
 		return myMessageHistory;
+	}
+	
+	public void addFiles(List<FileHolder> files)
+	{
+		if(files == null)
+			return;
+		if(receivedFiles == null)
+			receivedFiles = new ArrayList<>();
+		receivedFiles.addAll(files);
 	}
 
 

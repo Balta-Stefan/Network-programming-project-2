@@ -55,13 +55,13 @@ public class CustomSocket
 		try
 		{
 			InputStream is = socket.getInputStream();
-			int dataLength = 0;
+			int dataLength = 0x0;
 			byte[] dataLengthBytes = is.readNBytes(4);
 			
-			dataLength |= (dataLengthBytes[0]);
-			dataLength |= (dataLengthBytes[1] << 8);
-			dataLength |= (dataLengthBytes[2] << 12);
-			dataLength |= (dataLengthBytes[3] << 16);
+			dataLength |= ((int)(dataLengthBytes[0])) & 0xFF;
+			dataLength |= (((int)dataLengthBytes[1]) << 8) & 0xFF00;
+			dataLength |= (((int)dataLengthBytes[2]) << 16) & 0xFF0000;
+			dataLength |= (((int)dataLengthBytes[3]) << 24) & 0xFF000000;
 			
 			if(dataLength > max_receive_size)
 				return Optional.empty();
@@ -118,10 +118,14 @@ public class CustomSocket
 			byte[] lengthStream = new byte[4];
 			
 			int dataLength = data.length;
-			lengthStream[0] = (byte)(dataLength & 0x000000FF);
-			lengthStream[1] = (byte)((dataLength & 0x0000FF00) >> 8);
-			lengthStream[2] = (byte)((dataLength & 0x00FF0000) >> 12);
-			lengthStream[3] = (byte)((dataLength & 0xFF000000) >> 16);
+			lengthStream[0] = (byte)dataLength;
+			lengthStream[1] = (byte)(dataLength >> 8);
+			lengthStream[2] = (byte)(dataLength >> 16);
+			lengthStream[3] = (byte)(dataLength >> 24);
+			
+			System.out.println("Sending data over socket with length: " + dataLength + ", and bytes: ");
+			for(byte b : lengthStream)
+				System.out.println(b);
 			
 			os.write(lengthStream);
 			os.write(data);

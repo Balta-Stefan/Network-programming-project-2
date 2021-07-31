@@ -87,6 +87,7 @@ public class REDIS_TrainstationPersistence implements ITrainstationPersistence
 			Map<String, String> data = jedis.hgetAll("line:" + line.lineID);
 			
 			Set<String> keys = data.keySet();
+			keys.remove("representation");
 			for(String k : keys)
 			{
 				// key format: station:someID

@@ -36,16 +36,16 @@ import mdp2021.backend.utilities.BCrypt_hasher;
 import mdp2021.backend.utilities.PasswordHasher;
 
 
-public class GUI_Initializer extends Application
+public class Backend_GUI_Initializer extends Application
 {
-	private static final Logger log = Logger.getLogger(GUI_Initializer.class.getName());
+	private static final Logger log = Logger.getLogger(Backend_GUI_Initializer.class.getName());
 	static
 	{
 		log.setLevel(Level.FINEST);
 		FileHandler txtHandler;
 		try
 		{
-			txtHandler = new FileHandler("Logs/GUI_Initializer.txt", true);
+			txtHandler = new FileHandler("Logs/Backend_GUI_Initializer.txt", true);
 			SimpleFormatter txtFormatter = new SimpleFormatter();
 			txtHandler.setFormatter(txtFormatter);
 			log.addHandler(txtHandler);
@@ -59,7 +59,7 @@ public class GUI_Initializer extends Application
 	private static final String MULTICAST_GROUP_property = "MULTICAST_GROUP";
 	private static final String MULTICAST_PORT_property = "MULTICAST_PORT";
 	private static final String MULTICAST_MAX_BUFFER_SIZE_property = "MULTICAST_MAX_BUFFER_SIZE";
-	
+	private static final String fxmlPath = "MDP2021 GUI.fxml";
 	
 	private String MULTICAST_GROUP;
 	private int MULTICAST_PORT;
@@ -68,7 +68,6 @@ public class GUI_Initializer extends Application
 	
 	private final ITrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
 	private final IUserDAO userPersistence = new XML_UserDAO(".\\Application data\\Users\\");
-	private final PasswordHasher hasher = new BCrypt_hasher();
 	
 	
 	private static final String downloadFolder = "Application data\\Downloaded reports\\";
@@ -171,11 +170,6 @@ public class GUI_Initializer extends Application
 			return;
 		}
 		
-		
-		
-		String fxmlPath = "MDP2021 GUI.fxml";
-		System.out.println("Resource URI: " + this.getClass().getResource(fxmlPath));
-
 		FXMLLoader fxmlLoader = new FXMLLoader(this.getClass().getResource(fxmlPath));
 		
 		Parent root = null;
@@ -192,7 +186,6 @@ public class GUI_Initializer extends Application
 		//FXMLLoader.load(Paths.get(fxmlPath).toUri().toURL());
 		javaFXController = fxmlLoader.<GUI_JavaFX_Controller>getController();
 		javaFXController.setApplicationObject(this);
-		System.out.println("Set applicationObject");
 		
 		primaryStage.setTitle("MDP2021 (Balta Stefan)");
 		primaryStage.setScene(new Scene(root));

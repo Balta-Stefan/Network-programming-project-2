@@ -6,6 +6,6 @@ public class Main
 {
 	public static void main(String[] args)
 	{
-		Application.launch(GUI_Initializer.class, args[0]); // this line blocks as long as the GUI is open
+		Application.launch(Backend_GUI_Initializer.class, args[0]); // this line blocks as long as the GUI is open
 	}
 }

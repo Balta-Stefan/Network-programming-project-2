@@ -62,8 +62,6 @@ public class Socket_service extends Thread
 	@Override
 	public void run()
 	{
-		System.out.println("Socket service started.");
-		
 		while(true)
 		{
 			try

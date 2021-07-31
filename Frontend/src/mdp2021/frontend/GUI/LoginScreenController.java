@@ -15,7 +15,7 @@ import javafx.scene.control.Label;
 import javafx.scene.control.PasswordField;
 import javafx.scene.control.TextField;
 import javafx.scene.paint.Color;
-import mdp2021.backend.shared.LoginReply;
+import mdp2021.backend.shared.Code_response;
 
 public class LoginScreenController extends BaseFXController
 {
@@ -34,6 +34,13 @@ public class LoginScreenController extends BaseFXController
 		{
 			e.printStackTrace();
 		}
+	}
+	
+	private Frontend_GUI_Initializer applicationObject;
+	
+	public void setApplicationObject(Frontend_GUI_Initializer applicationObject)
+	{
+		this.applicationObject = applicationObject;
 	}
 	
 	@FXML
@@ -57,12 +64,13 @@ public class LoginScreenController extends BaseFXController
     	String password = passwordInput.getText();
     	
     	
-    	Task<Optional<LoginReply>> tempTask = new Task<Optional<LoginReply>>()
+    	Task<Optional<Code_response>> tempTask = new Task<Optional<Code_response>>()
 		{
 			@Override
-			protected Optional<LoginReply> call() throws Exception
+			protected Optional<Code_response> call() throws Exception
 			{
-				return frontendController.login(username, password);
+				return applicationObject.login(username, password);
+				//return frontendController.login(username, password);
 			}
 		};
 		
@@ -81,7 +89,7 @@ public class LoginScreenController extends BaseFXController
 		tempTask.setOnSucceeded((successEvent)->
 		{
 			loginButton.setDisable(false);
-			Optional<LoginReply> replyObj = tempTask.getValue();
+			Optional<Code_response> replyObj = tempTask.getValue();
 			
 			if(replyObj.isEmpty())
 			{
@@ -90,24 +98,17 @@ public class LoginScreenController extends BaseFXController
 				return;
 			}
 			
-			LoginReply reply = replyObj.get();
+			Code_response reply = replyObj.get();
 			
-	    	if(reply.getCodeResponse().getCode() != 200)
+	    	if(reply.getCode() != 200)
 	    	{
-	    		loginStatusLabel.setText(reply.getCodeResponse().getMessage());
+	    		loginStatusLabel.setText(reply.getMessage());
 				loginStatusLabel.setTextFill(Color.RED);
 				return;
 	    	}
 	    	
-	    	loginStatusLabel.setText("Login successful");
-	    	loginStatusLabel.setTextFill(Color.GREEN);
-	 
-	    	
-	    	// show the new window
-	    	int trainstationID = frontendController.getTrainstationID();
-	    	
-	    
-	    	activateWindow(employeePanelFXMLPath, "Station: " + trainstationID, event);
+	    	applicationObject.activateEmployeePanel();
+	    	//activateWindow(employeePanelFXMLPath, "Station: " + trainstationID, event);
 	    	
 	    	/*try
 			{

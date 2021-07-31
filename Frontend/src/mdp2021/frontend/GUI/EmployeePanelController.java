@@ -26,6 +26,8 @@ import javafx.scene.control.ListView;
 import javafx.scene.control.Tab;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.input.KeyCode;
+import javafx.scene.input.KeyEvent;
 import javafx.scene.paint.Color;
 import javafx.stage.FileChooser;
 import javafx.stage.FileChooser.ExtensionFilter;
@@ -34,8 +36,10 @@ import mdp2021.backend.model.StationArrival;
 import mdp2021.backend.model.TrainLine;
 import mdp2021.backend.model.TrainstationUsers;
 import mdp2021.backend.model.User;
+import mdp2021.backend.persistence.Filesystem_ReportPersistence;
 import mdp2021.backend.shared.Announcement;
 import mdp2021.backend.shared.Code_response;
+import mdp2021.backend.shared.FileHolder;
 import mdp2021.backend.shared.FileOrTextMessage;
 import mdp2021.frontend.utilities.ChatMessageHistory;
 
@@ -44,10 +48,21 @@ public class EmployeePanelController extends BaseFXController
 {
 	private HashMap<ChatMessageHistory, ChatMessageHistory> chatHistory = new HashMap<>();
 	
-	public EmployeePanelController()
+	private Frontend_GUI_Initializer applicationObject;
+	
+	public void setApplicationObject(Frontend_GUI_Initializer applicationObject)
 	{
-		frontendController.setEmployeePanelController(this);
+		this.applicationObject = applicationObject;
+		
+    	Optional<List<TrainstationUsers>> trainstationUsers = applicationObject.getTrainstationUsers();
+    	if(trainstationUsers.isPresent())
+    	{
+    		List<TrainstationUsers> usersData = trainstationUsers.get();
+  
+    		chatTrainstationsComboBox.getItems().addAll(usersData);
+    	}
 	}
+	
 	
 	private File chosenReport;
 
@@ -117,7 +132,8 @@ public class EmployeePanelController extends BaseFXController
     private ListView<File> chatFilesListView;
 
     @FXML
-    private Button sendMessageButton;
+    private ListView<FileHolder> receivedFilesFromChat;
+    
 
     @FXML
     private Label chatMessageStatusLabel;
@@ -155,15 +171,7 @@ public class EmployeePanelController extends BaseFXController
     	trainLinesList_recordTrainPassTab.setItems(trainLinesListViewItems);
     	
     	lineStations_lineSchedulesTab.setItems(lineStations_lineSchedulesTabItems);
-    	
-    	Optional<List<TrainstationUsers>> trainstationUsers = frontendController.getTrainstationUsers();
-    	if(trainstationUsers.isPresent())
-    	{
-    		List<TrainstationUsers> usersData = trainstationUsers.get();
-    		for(TrainstationUsers c : usersData)
-    			System.out.println(c.trainStation.getID());
-    		chatTrainstationsComboBox.getItems().addAll(usersData);
-    	}
+
     }
     
     @FXML
@@ -178,7 +186,7 @@ public class EmployeePanelController extends BaseFXController
 			@Override
 			protected Boolean call() throws Exception
 			{
-				return frontendController.sendMulticastData(announcementMessage);
+				return applicationObject.sendMulticastData(announcementMessage);
 			}
 		};
 		
@@ -258,17 +266,22 @@ public class EmployeePanelController extends BaseFXController
     	
     	fileChooser.getExtensionFilters().add(new ExtensionFilter("File type:" , "*"));
     	File fileToSend = fileChooser.showOpenDialog(((Node)(event.getSource())).getScene().getWindow());
+    	if(fileToSend == null)
+    		return;
     	
     	chatFilesListView.getItems().add(fileToSend);
     }
     
-    private void addMessageToHistory(TrainstationUsers tu, User user, String myMessage, String receiverMessage)
+    private void addMessageToHistory(TrainstationUsers tu, User user, String myMessage, FileOrTextMessage receiverMessage)
     {
-    	ChatMessageHistory temp = new ChatMessageHistory(tu, user, myMessage, receiverMessage);
+    	String receiverMessageContent = (receiverMessage == null) ? null : receiverMessage.message;
+    	ChatMessageHistory temp = new ChatMessageHistory(tu, user, myMessage, receiverMessageContent);
 		ChatMessageHistory obj = chatHistory.get(temp);
 		
 		if(obj == null)
 		{
+			if(receiverMessage != null && receiverMessage.files != null)
+				temp.addFiles(receiverMessage.files);
 			chatHistory.put(temp, temp);
 		}
 		else
@@ -279,7 +292,9 @@ public class EmployeePanelController extends BaseFXController
 			}
 			else // receiving
 			{
-				obj.appendReceiverMessage(receiverMessage);
+				if(receiverMessage.files != null)
+					obj.addFiles(receiverMessage.files);
+				obj.appendReceiverMessage(receiverMessage.message);
 			}
 		}
     }
@@ -307,7 +322,18 @@ public class EmployeePanelController extends BaseFXController
 		    				chatTrainstationsComboBox.getSelectionModel().select(tu);
 		    				chatUsersComboBox.getSelectionModel().select(user);
 		    				
-		    				addMessageToHistory(tu, user, null, message.message);
+		    				addMessageToHistory(tu, user, null, message);
+		    				
+		    				// save the file on the file system
+		    				Filesystem_ReportPersistence filesystemPersistence = new Filesystem_ReportPersistence("Application data/Received files/");
+		    				List<FileHolder> receivedFiles = message.files;
+		    				if(receivedFiles != null)
+		    				{
+		    					for(FileHolder file : receivedFiles)
+		    					{
+		    						filesystemPersistence.saveReport(file);
+		    					}
+		    				}
 		    				
 		    				return;
 		    			}
@@ -317,8 +343,7 @@ public class EmployeePanelController extends BaseFXController
 		});
     }
     
-    @FXML
-    void sendMessage(Event event)
+    private void sendChatMessage()
     {
     	String message = chatMessageInput.getText();
     	User receiver = chatUsersComboBox.getSelectionModel().getSelectedItem();
@@ -348,27 +373,19 @@ public class EmployeePanelController extends BaseFXController
 			@Override
 			protected Code_response call() throws Exception
 			{
-				return frontendController.sendMessage(message, files, receiver.getUsername());
+				return applicationObject.sendMessage(message, files, receiver.getUsername());
 			}
 		};
-    	
-		tempTask.setOnRunning((runningEvent)->
-		{
-			sendMessageButton.setDisable(true);
-		});
+    
 		
 		tempTask.setOnFailed((failedEvent)->
 		{
-			sendMessageButton.setDisable(false);
-			
 			chatMessageStatusLabel.setText("Error.");
 			chatMessageStatusLabel.setTextFill(Color.RED);
 		});
 		
 		tempTask.setOnSucceeded((successEvent)->
 		{
-			sendMessageButton.setDisable(false);
-			
 			Code_response response = tempTask.getValue();
 			
 			if(response.getCode() != 200)
@@ -379,6 +396,8 @@ public class EmployeePanelController extends BaseFXController
 			else
 			{
 				chatMessageInput.clear();
+				
+				chatFilesListView.getItems().clear();
 				
 				chatMessageStatusLabel.setText(response.getMessage());
 				chatMessageStatusLabel.setTextFill(Color.GREEN);
@@ -395,7 +414,49 @@ public class EmployeePanelController extends BaseFXController
 		
 		executor.submit(tempTask);
     }
+    
+    @FXML
+    void sendMessage(Event event)
+    {
+    	if(event instanceof KeyEvent)
+    	{
+    		KeyEvent kEvent = (KeyEvent)event;
+    		if(kEvent.getCode() == KeyCode.ENTER)
+    			sendChatMessage();
+    	}
+    }
 	
+    private void displayChatHistory(User otherUser)
+    {
+    	for(TrainstationUsers tu : chatTrainstationsComboBox.getItems())
+    	{
+    		for(User user : tu.users)
+    		{
+    			if(user.getUsername().equals(otherUser.getUsername()))
+    			{
+    				chatTrainstationsComboBox.getSelectionModel().select(tu);
+    				chatUsersComboBox.getSelectionModel().select(user);
+    				
+    				ChatMessageHistory tmp = new ChatMessageHistory(tu, user, null, null);
+    				ChatMessageHistory history = chatHistory.get(tmp);
+    				
+    				if(history != null)
+    				{
+    					sentMessagesTextArea.setText(history.getMyMessageHistory());
+    					receiverTextArea.setText(history.getReceiverMessageHistory());
+    					
+    					receivedFilesFromChat.getItems().clear();
+    					List<FileHolder> receivedFiles = history.getReceivedFiles();
+    					if(receivedFiles != null)
+    						receivedFilesFromChat.getItems().addAll(receivedFiles);
+    					
+    					return;
+    				}
+    			}
+    		}
+    	}
+    }
+    
     @FXML
     void selectChatNotification(Event event)
     {
@@ -410,8 +471,8 @@ public class EmployeePanelController extends BaseFXController
     	// iterate through chatTrainstationsComboBox and find the TrainstationUsers instance that contains the user with username from FileOrTextMessage.sender
     	
     	User sender = new User(null, message.sender, null ,null);
-    	
-    	for(TrainstationUsers tu : chatTrainstationsComboBox.getItems())
+    	displayChatHistory(sender);
+    	/*for(TrainstationUsers tu : chatTrainstationsComboBox.getItems())
     	{
     		for(User user : tu.users)
     		{
@@ -430,7 +491,7 @@ public class EmployeePanelController extends BaseFXController
     				}
     			}
     		}
-    	}
+    	}*/
     }
     
     @FXML
@@ -439,6 +500,8 @@ public class EmployeePanelController extends BaseFXController
     	TrainstationUsers selectedStation = chatTrainstationsComboBox.getSelectionModel().getSelectedItem();
     	if(selectedStation == null)
     		return;
+    	
+    	receivedFilesFromChat.getItems().clear();
     	
     	sentMessagesTextArea.clear();
     	receiverTextArea.clear();
@@ -486,7 +549,7 @@ public class EmployeePanelController extends BaseFXController
 			@Override
 			protected String call() throws Exception
 			{
-				return frontendController.reportTrainPass(dateTime, selectedLine);
+				return applicationObject.reportTrainPass(dateTime, selectedLine);
 			}
 		};
     	
@@ -544,7 +607,7 @@ public class EmployeePanelController extends BaseFXController
 			@Override
 			protected LinesOfTrainstation call() throws Exception
 			{
-				return frontendController.getLines();
+				return applicationObject.getLines();
 			}
     	};
     	
@@ -593,7 +656,16 @@ public class EmployeePanelController extends BaseFXController
     	LinesOfTrainstation linesData = lines.get();*/
     }
 
-   
+    @FXML
+    void chatUserSelect(Event event)
+    {
+    	User selectedReceiver = chatUsersComboBox.getSelectionModel().getSelectedItem();
+    	if(selectedReceiver == null)
+    		return;
+    	
+    	receivedFilesFromChat.getItems().clear();
+    	displayChatHistory(selectedReceiver);
+    }
 
 
     @FXML
@@ -614,7 +686,7 @@ public class EmployeePanelController extends BaseFXController
 			@Override
 			protected Code_response call() throws Exception
 			{
-				return frontendController.logout();
+				return applicationObject.logout();
 			}
 		};
 		
@@ -636,16 +708,17 @@ public class EmployeePanelController extends BaseFXController
 				return;
 			}
 			
-			try
+			applicationObject.activateLoginPanel();
+			/*try
 			{
 				Thread.sleep(500);
 			} 
 			catch (InterruptedException e){}
 			
 			logoutSuccessLabel.setText(response.getMessage());
-			logoutSuccessLabel.setTextFill(Color.GREEN);
+			logoutSuccessLabel.setTextFill(Color.GREEN);*/
 			
-			activateWindow(loginPanelFXMLPath, "Login", event);
+			//activateWindow(loginPanelFXMLPath, "Login", event);
 		});
 		
 		executor.submit(tempTask);
@@ -657,7 +730,11 @@ public class EmployeePanelController extends BaseFXController
     	FileChooser fileChooser = new FileChooser();
     	
     	fileChooser.getExtensionFilters().add(new ExtensionFilter("File type:" , "*.pdf"));
-    	chosenReport = fileChooser.showOpenDialog(((Node)(event.getSource())).getScene().getWindow());
+    	File tempFile = fileChooser.showOpenDialog(((Node)(event.getSource())).getScene().getWindow());
+    	
+    	if(tempFile == null)
+    		return;
+    	chosenReport = tempFile;
     	
     	selectedFileLabel.setText(chosenReport.getAbsolutePath());
     }
@@ -670,7 +747,7 @@ public class EmployeePanelController extends BaseFXController
 			@Override
 			protected Code_response call() throws Exception
 			{
-				return frontendController.uploadReport(chosenReport);
+				return applicationObject.uploadReport(chosenReport);
 			}
     	};
     	

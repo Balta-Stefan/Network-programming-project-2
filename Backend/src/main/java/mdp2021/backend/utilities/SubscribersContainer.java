@@ -18,7 +18,6 @@ public final class SubscribersContainer
 	private static final Logger log = Logger.getLogger(SubscribersContainer.class.getName());
 	static
 	{
-		System.out.println("SubscribersContainer static block");
 		log.setLevel(Level.FINEST);
 		FileHandler txtHandler;
 		try
@@ -39,7 +38,18 @@ public final class SubscribersContainer
 	{
 		synchronized(users)
 		{
-			users.putIfAbsent(username, socket);
+			Socket existingSocket = users.get(username);
+			if(existingSocket != null)
+			{
+				try
+				{
+					existingSocket.close();
+				} catch (IOException e)
+				{
+					log.info(e.getMessage());
+				}
+			}
+			users.put(username, socket);
 		}
 	}
 	

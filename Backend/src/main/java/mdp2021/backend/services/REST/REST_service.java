@@ -36,7 +36,7 @@ public class REST_service
 	public Response getTrainSchedule(@CookieParam("cookie") Cookie cookie)
 	{
 		if(cookie == null)
-			return Response.status(403).entity("Cookie called 'cookie' not found in the request.").build();
+			return Response.status(400).entity("Cookie called 'cookie' not found in the request.").build();
 		
 		
 		ITrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
@@ -46,7 +46,7 @@ public class REST_service
 		Optional<User> session = userSessions.getUser(cookieValue);
 		
 		if(session.isEmpty())
-			return Response.status(400).entity("User not logged in.").build();
+			return Response.status(401).entity("User not logged in.").build();
 		
 		User user = session.get();
 		
@@ -65,7 +65,7 @@ public class REST_service
 	public Response logPassingTrain(@CookieParam("cookie") Cookie cookie, TrainPassReport report)
 	{
 		if(cookie == null)
-			return Response.status(403).entity("Cookie called 'cookie' not found in the request.").build();
+			return Response.status(400).entity("Cookie called 'cookie' not found in the request.").build();
 		
 		
 		ITrainstationPersistence trainstationPersistence = new REDIS_TrainstationPersistence();
@@ -75,7 +75,7 @@ public class REST_service
 		Optional<User> session = userSessions.getUser(cookieValue);
 		
 		if(session.isEmpty())
-			return Response.status(403).entity("User not logged in.").build();
+			return Response.status(401).entity("User not logged in.").build();
 		
 		User user = session.get();
 		
@@ -85,7 +85,7 @@ public class REST_service
 		// check whether the given line passes through the user's station
 		Optional<StationArrival> arrival = trainstationPersistence.getArrivalOfLine(report.trainstation, report.trainLine);
 		if(arrival.isEmpty())
-			return Response.status(401).build();
+			return Response.status(400).build();
 		
 		boolean status = trainstationPersistence.reportTrainPass(report);
 		

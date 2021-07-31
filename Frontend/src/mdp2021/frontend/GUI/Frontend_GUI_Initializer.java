@@ -1,4 +1,4 @@
-package mdp2021.frontend.controller;
+package mdp2021.frontend.GUI;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -36,8 +36,11 @@ import com.google.gson.Gson;
 import com.google.gson.JsonSyntaxException;
 import com.google.gson.reflect.TypeToken;
 
-import mdp2021.backend.services.socket.CustomSocket;
-import mdp2021.backend.services.socket.MulticastSocketService;
+import javafx.application.Application;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
+import javafx.stage.Stage;
 import mdp2021.backend.GUI.GUI_JavaFX_Controller;
 import mdp2021.backend.model.LinesOfTrainstation;
 import mdp2021.backend.model.TrainLine;
@@ -48,16 +51,17 @@ import mdp2021.backend.model.User;
 import mdp2021.backend.services.RMI.RMI_services_interface;
 import mdp2021.backend.services.SOAP.SOAP_service;
 import mdp2021.backend.services.SOAP.SOAP_serviceServiceLocator;
+import mdp2021.backend.services.socket.CustomSocket;
+import mdp2021.backend.services.socket.MulticastSocketService;
 import mdp2021.backend.shared.Announcement;
 import mdp2021.backend.shared.Code_response;
 import mdp2021.backend.shared.FileHolder;
 import mdp2021.backend.shared.FileOrTextMessage;
 import mdp2021.backend.shared.LoginReply;
 import mdp2021.backend.shared.SubscribeRequest;
-import mdp2021.frontend.GUI.EmployeePanelController;
 import mdp2021.frontend.utilities.MessageDaemon;
 
-public class Controller
+public class Frontend_GUI_Initializer extends Application
 {
 	private static class AnnouncementUpdaterDaemon extends Thread
 	{
@@ -89,6 +93,7 @@ public class Controller
 		{
 			this.multicastService = multicastService;
 			this.interfaceToUpdate = interfaceToUpdate;
+			
 			
 			multicastService.start();
 		}
@@ -150,6 +155,8 @@ public class Controller
 	}
 	
 	
+	private static final String loginPanelTitle = "Login";
+	
 	private static final String apiURL = "http://localhost:8080/MDP2021_backend/api/v1";
 	private static final Logger log = Logger.getLogger(GUI_JavaFX_Controller.class.getName());
 	static
@@ -158,7 +165,7 @@ public class Controller
 		FileHandler txtHandler;
 		try
 		{
-			txtHandler = new FileHandler("Logs/Controller.txt", true);
+			txtHandler = new FileHandler("Logs/Frontend_GUI_Initializer.txt", true);
 			SimpleFormatter txtFormatter = new SimpleFormatter();
 			txtHandler.setFormatter(txtFormatter);
 			log.addHandler(txtHandler);
@@ -168,6 +175,8 @@ public class Controller
 		}
 	}
 	
+	private static final String loginPanelFXMLPath = "login screen.fxml";
+	private static final String employeePanelFXMLPath = "employee panel.fxml";
 	
 	private static final String RMI_service_nameProperty = "RMI_service_name";
 	private static final String RMI_service_portProperty = "RMI_service_port";
@@ -179,31 +188,37 @@ public class Controller
 	private static final String MULTICAST_PORT_property = "MULTICAST_PORT";
 	
 	private static final String propertiesPath = "Resources\\application properties.properties";
-	private static final String RMI_service_name;
-	private static final int RMI_port;
-	private static final String socketServiceAddress;
-	private static final int socketServicePort;
-	private static final String KEY_STORE_PASSWORD;
+	private String RMI_service_name;
+	private int RMI_port;
+	private String socketServiceAddress;
+	private int socketServicePort;
+	private String KEY_STORE_PASSWORD;
 	public static String MULTICAST_GROUP;
 	public static int MULTICAST_PORT;
 	public static final int MULTICAST_MAX_BUFFER_SIZE = 2048;
 	
-	private static RMI_services_interface rmiService;
-	private static SOAP_service soapService;
-	private static MessageDaemon messageDaemon;
-	private static MulticastSocketService multicastService;
+	private RMI_services_interface rmiService;
+	private SOAP_service soapService;
+	private MessageDaemon messageDaemon;
+	private MulticastSocketService multicastService;
 	private AnnouncementUpdaterDaemon announcementsDaemon;
+	private CustomSocket pushNotificationSocket;
 	
 	// REST related
-	private static final Client client = ClientBuilder.newClient();
-	private static final WebTarget webTarget = client.target(apiURL);
+	private final Client client = ClientBuilder.newClient();
+	private final WebTarget webTarget = client.target(apiURL);
 	
-	private static String cookie;
-	private static TrainStation trainstationInfo;
-	private static Cookie cookieObject;
-	private static String username;
+	private String cookie;
+	private TrainStation trainstationInfo;
+	private Cookie cookieObject;
+	private String username;
 	
-	private static void RMI_Init()
+	private Stage currentStage;
+	
+	private EmployeePanelController employeeJavaFX_controller;
+	private LoginScreenController loginJavaFX_controller;
+	
+	private void RMI_Init()
 	{
 		System.setProperty("java.security.policy", "Resources/client_policyfile.txt");
 		
@@ -221,7 +236,7 @@ public class Controller
 		}
 	}
 	
-	private static void SOAP_init()
+	private void SOAP_init()
 	{
 		SOAP_serviceServiceLocator locator = new SOAP_serviceServiceLocator();
 		
@@ -247,56 +262,6 @@ public class Controller
 		return multicastService.sendData(announcementJSON.getBytes(StandardCharsets.UTF_8));
 	}
 	
-	static
-	{
-		// load properties
-		Properties backendProperties = new Properties();
-		
-		try(FileInputStream fis = new FileInputStream(new File(propertiesPath)))
-		{
-			backendProperties.load(fis);
-		}
-		catch (Exception e)
-		{
-			// TODO Auto-generated catch block
-			log.info(e.getMessage());
-		}
-		
-		RMI_service_name = backendProperties.getProperty(RMI_service_nameProperty);
-		RMI_port = Integer.parseInt(backendProperties.getProperty(RMI_service_portProperty));
-		socketServiceAddress = backendProperties.getProperty(socketServiceAddressProperty);
-		socketServicePort = Integer.parseInt(backendProperties.getProperty(socketServicePortProperty));
-		KEY_STORE_PASSWORD = backendProperties.getProperty(TRUST_STORE_PASSWORD_property);
-		MULTICAST_GROUP = backendProperties.getProperty(MULTICAST_GROUP_property);
-		MULTICAST_PORT = Integer.parseInt(backendProperties.getProperty(MULTICAST_PORT_property));
-		
-		// perform intialization for RMI
-		RMI_Init();
-		SOAP_init();
-		
-		// secure socket init
-		System.setProperty("javax.net.ssl.trustStore", TRUST_STORE_PATH);
-		System.setProperty("javax.net.ssl.trustStorePassword", KEY_STORE_PASSWORD);
-	}
-	
-	
-	public void setEmployeePanelController(EmployeePanelController employeePanel)
-	{
-		messageDaemon.setPanel(employeePanel);
-		messageDaemon.start();
-		
-		try
-		{
-			multicastService = new MulticastSocketService(MULTICAST_PORT, MULTICAST_GROUP, MULTICAST_MAX_BUFFER_SIZE);
-		} 
-		catch (IOException e)
-		{
-			log.severe(e.getMessage());
-		}
-		
-		announcementsDaemon = new AnnouncementUpdaterDaemon(multicastService, employeePanel);
-		announcementsDaemon.start();
-	}
 	
 
 	
@@ -357,10 +322,28 @@ public class Controller
 		}
 	}
 	
-	public Optional<LoginReply> login(String username, String password) throws RemoteException
+	private void activateDaemons()
+	{
+		messageDaemon = new MessageDaemon(pushNotificationSocket);
+		messageDaemon.setPanel(employeeJavaFX_controller);
+		messageDaemon.start();
+		
+		try
+		{
+			multicastService = new MulticastSocketService(MULTICAST_PORT, MULTICAST_GROUP, MULTICAST_MAX_BUFFER_SIZE);
+		} 
+		catch (IOException e)
+		{
+			log.severe(e.getMessage());
+		}
+		
+		announcementsDaemon = new AnnouncementUpdaterDaemon(multicastService, employeeJavaFX_controller);
+		announcementsDaemon.start();
+	}
+	
+	public Optional<Code_response> login(String username, String password) throws RemoteException
 	{
 		LoginReply reply = soapService.login(username, password);
-		Controller.username = username;
 		
 		cookie = reply.getCookie();
     	trainstationInfo = reply.getTrainstationInfo();
@@ -380,14 +363,79 @@ public class Controller
     		
     		Code_response loginInfo = (Code_response)responseObj.get();
     		
-    		messageDaemon = new MessageDaemon(socket);
+    		
     		//messageDaemon.start();
     		
     		System.out.println("Subscription: " + loginInfo.getCode() + ", " + loginInfo.getMessage());
-    		return Optional.of(reply);
+    		cookie = reply.getCookie();
+    		cookieObject = new Cookie("cookie", cookie);
+    		this.username = username;
+    		trainstationInfo = reply.getTrainstationInfo();
+    		
+    		pushNotificationSocket = socket;
+    		
+    		return Optional.of(reply.getCodeResponse());
     	}
     	
     	return Optional.empty();
+	}
+	
+	public void activateEmployeePanel()
+	{
+		try
+		{
+			FXMLLoader fxmlLoader = new FXMLLoader(this.getClass().getResource(employeePanelFXMLPath));
+			
+			Parent root = fxmlLoader.load();
+			employeeJavaFX_controller = fxmlLoader.<EmployeePanelController>getController();
+			employeeJavaFX_controller.setApplicationObject(this);
+			
+			
+			Stage newStage = new Stage();
+			newStage.setTitle("Station: " + trainstationInfo.getID());
+			newStage.setScene(new Scene(root));
+			newStage.show();
+			
+			currentStage.close();
+			currentStage = newStage;
+			
+			activateDaemons();
+			
+			// ((Node)(event.getSource())).getScene().getWindow().hide();
+		} 
+		catch (IOException e)
+		{
+			log.warning(e.getMessage());
+			e.printStackTrace();
+		}
+	}
+	
+	public void activateLoginPanel()
+	{
+		try
+		{
+			FXMLLoader fxmlLoader = new FXMLLoader(this.getClass().getResource(loginPanelFXMLPath));
+			
+			Parent root = fxmlLoader.load();
+			loginJavaFX_controller = fxmlLoader.<LoginScreenController>getController();
+			loginJavaFX_controller.setApplicationObject(this);
+			
+			
+			Stage newStage = new Stage();
+			newStage.setTitle(loginPanelTitle);
+			newStage.setScene(new Scene(root));
+			newStage.show();
+			
+			currentStage.close();
+			currentStage = newStage;
+			
+			// ((Node)(event.getSource())).getScene().getWindow().hide();
+		} 
+		catch (IOException e)
+		{
+			log.warning(e.getMessage());
+			e.printStackTrace();
+		}
 	}
 
 	public Code_response logout() throws RemoteException
@@ -425,8 +473,40 @@ public class Controller
 		
 		announcementsDaemon.stopService();
 		
+		if(response.getCode() != 200)
+			return response;
+		
 		return response;
 	}
+	
+	/*private void activateNewStage(String resource, String title)
+	{
+		try
+		{
+			FXMLLoader fxmlLoader = new FXMLLoader(this.getClass().getResource(resource));
+			
+			Parent root = fxmlLoader.load();
+			employeeJavaFX_controller = fxmlLoader.<EmployeePanelController>getController();
+			employeeJavaFX_controller.setApplicationObject(this);
+			
+			
+			Stage newStage = new Stage();
+			newStage.setTitle(title);
+			newStage.setScene(new Scene(root));
+			newStage.show();
+			
+			currentStage.close();
+			currentStage = newStage;
+			
+			// ((Node)(event.getSource())).getScene().getWindow().hide();
+		} 
+		catch (IOException e)
+		{
+			log.warning(e.getMessage());
+			e.printStackTrace();
+		}
+	}*/
+	
 	
 	public int getTrainstationID()
 	{
@@ -491,7 +571,16 @@ public class Controller
 			List<TrainstationUsers> trainStationsInfo = gson.fromJson(users, listOfTestObject);
 			
 			for(TrainstationUsers t: trainStationsInfo)
-				System.out.println(t);
+			{
+				for(User user : t.users)
+				{
+					if(user.getUsername().equals(username))
+					{
+						t.users.remove(user);
+						return Optional.of(trainStationsInfo);
+					}
+				}
+			}
 			
 			return Optional.of(trainStationsInfo);
 		}
@@ -539,4 +628,61 @@ public class Controller
 		
 		return (Code_response)responseObj.get();
 	}
+
+	
+	@Override
+	public void stop()
+	{
+		System.out.println("Frontend GUI shut down.");
+	}
+	
+	private void initializeData()
+	{
+		// load properties
+		Properties backendProperties = new Properties();
+		
+		try(FileInputStream fis = new FileInputStream(new File(propertiesPath)))
+		{
+			backendProperties.load(fis);
+		}
+		catch (Exception e)
+		{
+			// TODO Auto-generated catch block
+			log.info(e.getMessage());
+		}
+		
+		RMI_service_name = backendProperties.getProperty(RMI_service_nameProperty);
+		RMI_port = Integer.parseInt(backendProperties.getProperty(RMI_service_portProperty));
+		socketServiceAddress = backendProperties.getProperty(socketServiceAddressProperty);
+		socketServicePort = Integer.parseInt(backendProperties.getProperty(socketServicePortProperty));
+		KEY_STORE_PASSWORD = backendProperties.getProperty(TRUST_STORE_PASSWORD_property);
+		MULTICAST_GROUP = backendProperties.getProperty(MULTICAST_GROUP_property);
+		MULTICAST_PORT = Integer.parseInt(backendProperties.getProperty(MULTICAST_PORT_property));
+		
+		// perform intialization for RMI
+		RMI_Init();
+		SOAP_init();
+		
+		// secure socket init
+		System.setProperty("javax.net.ssl.trustStore", TRUST_STORE_PATH);
+		System.setProperty("javax.net.ssl.trustStorePassword", KEY_STORE_PASSWORD);
+	}
+	
+	@Override
+	public void start(Stage primaryStage) throws Exception
+	{
+		currentStage = primaryStage;
+		initializeData();
+		
+		FXMLLoader fxmlLoader = new FXMLLoader(this.getClass().getResource(loginPanelFXMLPath));
+		
+		Parent root = fxmlLoader.load();
+		loginJavaFX_controller = fxmlLoader.<LoginScreenController>getController();
+		loginJavaFX_controller.setApplicationObject(this);
+		
+		primaryStage.setTitle("Login");
+		primaryStage.setScene(new Scene(root));
+		primaryStage.show();
+	}
+	
 }

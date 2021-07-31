@@ -1,12 +1,8 @@
 package mdp2021.backend.GUI;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.rmi.RemoteException;
-import java.rmi.registry.LocateRegistry;
-import java.rmi.registry.Registry;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
@@ -15,7 +11,6 @@ import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Optional;
-import java.util.Properties;
 import java.util.Set;
 import java.util.concurrent.Executors;
 import java.util.concurrent.ThreadPoolExecutor;
@@ -45,24 +40,17 @@ import mdp2021.backend.model.StationArrival;
 import mdp2021.backend.model.TrainLine;
 import mdp2021.backend.model.TrainStation;
 import mdp2021.backend.model.User;
-import mdp2021.backend.persistence.Filesystem_ReportPersistence;
-import mdp2021.backend.persistence.IReportPersistence;
-import mdp2021.backend.persistence.ITrainstationPersistence;
-import mdp2021.backend.persistence.IUserDAO;
 import mdp2021.backend.persistence.REDIS_TrainstationPersistence;
-import mdp2021.backend.persistence.XML_UserDAO;
-import mdp2021.backend.services.RMI.RMI_services_interface;
 import mdp2021.backend.services.socket.MulticastSocketService;
 import mdp2021.backend.shared.Announcement;
 import mdp2021.backend.shared.FileHolder;
-import mdp2021.backend.utilities.BCrypt_hasher;
 import mdp2021.backend.utilities.PasswordHasher;
 
 // USE CLASS Event OVER ActionEvent!!!!
 
 public class GUI_JavaFX_Controller
 {
-	private GUI_Initializer applicationObject;
+	private Backend_GUI_Initializer applicationObject;
 	
 	private static final Logger log = Logger.getLogger(GUI_JavaFX_Controller.class.getName());
 	static
@@ -82,7 +70,7 @@ public class GUI_JavaFX_Controller
 	}
 	
 	
-	public void setApplicationObject(GUI_Initializer applicationObject)
+	public void setApplicationObject(Backend_GUI_Initializer applicationObject)
 	{
 		this.applicationObject = applicationObject;
 		multicastEventListener = new MulticastServiceGUIUpdater(applicationObject.getMulticastService(), this);
@@ -218,17 +206,9 @@ public class GUI_JavaFX_Controller
 		multicastEventListener.stopService();
 	}
 	
-	public GUI_JavaFX_Controller()
-	{
-		System.out.println("controller ctor");
-	}
 	
 	public void initialize()
 	{
-		System.out.println("initialize method");
-		
-	
-		
 		usersListviewItems = usersListView.getItems();
     	usersListviewItems.add(addNewUserPlaceholder);
     	

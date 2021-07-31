@@ -75,7 +75,7 @@ public final class SOAP_service
 	public LoginReply login(String username, String password)
 	{
 		Optional<User> user = userDatabase.getUser(username);
-		if(user.isEmpty())
+		if(user.isEmpty() || username.equals(user.get().getUsername()) == false)
 			return new LoginReply(new Code_response(403, "Username not found."), null, null);
 			//return new Code_response(403, "Username not found");
 		

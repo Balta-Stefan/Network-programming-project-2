@@ -135,8 +135,16 @@ public class MessageProcessor extends Thread
 			
 			Message message = (Message)received;
 			Optional<User> user = userSessions.getUser(message.sender);
+			
 			if(user.isEmpty())
 			{
+				// user might want to unsubscribe
+				if(received instanceof SubscribeRequest)
+				{
+					handleSubscriptionRequest(user.get(), cs, (SubscribeRequest)message);
+					return;
+				}
+				
 				Code_response response = new Code_response(403, "You are not logged in.");
 				cs.send(response);
 				try

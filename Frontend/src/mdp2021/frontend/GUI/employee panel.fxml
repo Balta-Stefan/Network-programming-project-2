@@ -181,7 +181,7 @@
                         <HBox alignment="CENTER" prefHeight="100.0" prefWidth="200.0" spacing="25.0">
                            <children>
                               <ComboBox fx:id="chatTrainstationsComboBox" onAction="#chat_stationSelect" prefWidth="150.0" promptText="Station" />
-                              <ComboBox fx:id="chatUsersComboBox" prefWidth="150.0" promptText="User" />
+                              <ComboBox fx:id="chatUsersComboBox" onAction="#chatUserSelect" prefWidth="150.0" promptText="User" />
                            </children>
                            <VBox.margin>
                               <Insets top="25.0" />
@@ -196,7 +196,7 @@
                                           <Insets top="25.0" />
                                        </VBox.margin></Label>
                                     <TextArea fx:id="sentMessagesTextArea" disable="true" minHeight="-Infinity" prefHeight="200.0" prefWidth="200.0" />
-                                    <TextField fx:id="chatMessageInput" promptText="Enter your message" />
+                                    <TextField fx:id="chatMessageInput" onKeyPressed="#sendMessage" promptText="Enter your message" />
                                     <Button mnemonicParsing="false" onAction="#addChatFiles" prefWidth="93.0" text="Add files">
                                        <VBox.margin>
                                           <Insets top="25.0" />
@@ -204,11 +204,6 @@
                                     </Button>
                                     <Button mnemonicParsing="false" onAction="#removeChatFile" prefWidth="93.0" text="Remove file" />
                                     <ListView fx:id="chatFilesListView" prefHeight="200.0" prefWidth="200.0" />
-                                    <Button fx:id="sendMessageButton" mnemonicParsing="false" onAction="#sendMessage" text="Send message">
-                                       <VBox.margin>
-                                          <Insets top="25.0" />
-                                       </VBox.margin>
-                                    </Button>
                                     <Label fx:id="chatMessageStatusLabel">
                                        <VBox.margin>
                                           <Insets top="25.0" />
@@ -223,6 +218,12 @@
                                           <Insets top="25.0" />
                                        </VBox.margin></Label>
                                     <TextArea fx:id="receiverTextArea" disable="true" minHeight="-Infinity" prefHeight="200.0" prefWidth="200.0" />
+                                    <Label text="Received files">
+                                       <VBox.margin>
+                                          <Insets top="83.0" />
+                                       </VBox.margin>
+                                    </Label>
+                                    <ListView fx:id="receivedFilesFromChat" prefHeight="160.0" prefWidth="200.0" />
                                  </children>
                               </VBox>
                            </children>
